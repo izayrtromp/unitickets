@@ -70,17 +70,49 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
 });
 
 // Update user role (Admin only)
-router.put('/:id', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+router.patch('/:id/role', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
     const { role } = req.body;
+    
+    const validRoles = ['STUDENT', 'CLASS_REP', 'ADMIN'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    if (req.params.id === req.user.id && role !== 'ADMIN') {
+      return res.status(400).json({ error: 'Cannot remove your own ADMIN role' });
+    }
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role },
-      select: { id: true, name: true, email: true, role: true, isActive: true }
+      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true }
     });
     res.json(user);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update user' });
+    res.status(500).json({ error: 'Failed to update user role' });
+  }
+});
+
+// Reset user password (Admin only)
+router.patch('/:id/password', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const { password } = req.body;
+    
+    if (!password || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    await prisma.user.update({
+      where: { id: req.params.id },
+      data: { passwordHash }
+    });
+    
+    res.json({ success: true, message: 'Password reset successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reset password' });
   }
 });
 

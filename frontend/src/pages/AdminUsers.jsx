@@ -15,6 +15,7 @@ const AdminUsers = () => {
   const [role, setRole] = useState('STUDENT');
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
+  const [actionSuccess, setActionSuccess] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -59,8 +60,37 @@ const AdminUsers = () => {
       const endpoint = currentStatus ? 'deactivate' : 'reactivate';
       await api.patch(`/users/${userId}/${endpoint}`);
       fetchUsers();
+      setActionSuccess(`User ${currentStatus ? 'deactivated' : 'reactivated'} successfully`);
+      setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.error || `Failed to ${currentStatus ? 'deactivate' : 'reactivate'} user.`);
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await api.patch(`/users/${userId}/role`, { role: newRole });
+      fetchUsers();
+      setActionSuccess('User role updated successfully');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update role');
+    }
+  };
+
+  const handleResetPassword = async (userId) => {
+    const newPassword = window.prompt('Enter new password for this user (min 6 characters):');
+    if (!newPassword) return;
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    try {
+      await api.patch(`/users/${userId}/password`, { password: newPassword });
+      setActionSuccess('Password reset successfully');
+      setTimeout(() => setActionSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to reset password');
     }
   };
 
@@ -108,6 +138,7 @@ const AdminUsers = () => {
       </div>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        {actionSuccess && <div className="m-4 text-sm text-green-600 bg-green-50 p-3 rounded">{actionSuccess}</div>}
         {error ? (
           <div className="p-4 text-red-500">{error}</div>
         ) : (
@@ -129,9 +160,21 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                        {formatLabel(u.role)}
-                      </span>
+                      {u.id === currentUser?.id ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                          {formatLabel(u.role)}
+                        </span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          className="text-xs rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6"
+                        >
+                          <option value="STUDENT">Student</option>
+                          <option value="CLASS_REP">Class Rep</option>
+                          <option value="ADMIN">Admin</option>
+                        </select>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -139,16 +182,22 @@ const AdminUsers = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                      <button 
+                        onClick={() => handleResetPassword(u.id)}
+                        className="text-primary-600 hover:text-primary-900"
+                      >
+                        Reset Password
+                      </button>
                       {u.id !== currentUser?.id ? (
                         <button 
                           onClick={() => handleToggleActive(u.id, u.isActive)}
-                          className={`text-sm ${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                          className={`${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
                         >
                           {u.isActive ? 'Deactivate' : 'Reactivate'}
                         </button>
                       ) : (
-                        <span className="text-sm text-gray-400 italic">Current Account</span>
+                        <span className="text-gray-400 italic">Current Account</span>
                       )}
                     </td>
                   </tr>
