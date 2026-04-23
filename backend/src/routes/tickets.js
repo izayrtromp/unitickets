@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { createNotification } = require('../utils/notify');
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -159,6 +160,24 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
       let actionText = `changed status to ${status}`;
       if (oldTicket.status === 'CLOSED' && status === 'IN_PROGRESS') {
         actionText = 'reopened ticket';
+        if (req.user.id !== oldTicket.submitterId) {
+          await createNotification({
+            userId: oldTicket.submitterId, 
+            ticketId: ticket.id, 
+            type: 'REOPENED',
+            message: `Your ticket '${ticket.title}' was reopened`
+          });
+        }
+      } else {
+        if (req.user.id !== oldTicket.submitterId) {
+          const readableStatus = status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          await createNotification({
+            userId: oldTicket.submitterId, 
+            ticketId: ticket.id, 
+            type: 'STATUS',
+            message: `Your ticket '${ticket.title}' was moved to ${readableStatus}`
+          });
+        }
       }
 
       await prisma.activity.create({
@@ -187,6 +206,15 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
             userId: req.user.id,
             action: actionText
           }
+        });
+      }
+
+      if (assignedToId) {
+        await createNotification({
+          userId: assignedToId, 
+          ticketId: ticket.id, 
+          type: 'ASSIGNED',
+          message: `You were assigned ticket: ${ticket.title}`
         });
       }
     }

@@ -49,6 +49,7 @@ const TicketDetail = () => {
     try {
       await api.put(`/tickets/${id}`, { status: newStatus });
       fetchTicket();
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
       console.error(err);
     }
@@ -58,6 +59,7 @@ const TicketDetail = () => {
     try {
       await api.put(`/tickets/${id}`, { assignedToId: user.id });
       fetchTicket();
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
       console.error(err);
     }
@@ -67,6 +69,7 @@ const TicketDetail = () => {
     try {
       await api.put(`/tickets/${id}`, { assignedToId: selectedAssignee || null });
       fetchTicket();
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
       console.error(err);
     }
@@ -79,6 +82,7 @@ const TicketDetail = () => {
       await api.post(`/tickets/${id}/comments`, { content: commentText });
       setCommentText('');
       fetchTicket();
+      window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
       console.error(err);
     }

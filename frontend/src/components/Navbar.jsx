@@ -1,16 +1,75 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Ticket, LogOut } from 'lucide-react';
+import { Ticket, LogOut, Bell } from 'lucide-react';
+import api from '../api/axios';
+import { formatRelativeTime } from '../utils/format';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      const handleRefresh = () => fetchNotifications();
+      window.addEventListener('refreshNotifications', handleRefresh);
+      return () => window.removeEventListener('refreshNotifications', handleRefresh);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await api.get('/notifications');
+      setNotifications(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markAsRead = async (id) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await api.patch('/notifications/read-all');
+      setNotifications(notifications.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleNotificationClick = (n) => {
+    if (!n.read) markAsRead(n.id);
+    setShowDropdown(false);
+    if (n.ticketId) navigate(`/tickets/${n.ticketId}`);
+  };
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -30,7 +89,50 @@ const Navbar = () => {
             )}
             {user && (
               <>
-                <span className="text-sm text-gray-700 font-medium">
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={() => setShowDropdown(!showDropdown)}
+                    className="p-2 relative rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+                    )}
+                  </button>
+
+                  {showDropdown && (
+                    <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                      <div className="p-3 border-b border-gray-100 flex justify-between items-center">
+                        <h3 className="text-sm font-medium text-gray-900">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <button onClick={markAllAsRead} className="text-xs text-primary-600 hover:text-primary-800">
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-96 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="p-4 text-sm text-center text-gray-500">No notifications</div>
+                        ) : (
+                          notifications.map((n) => (
+                            <div 
+                              key={n.id} 
+                              onClick={() => handleNotificationClick(n)}
+                              className={`p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? 'bg-blue-50 hover:bg-blue-100' : ''}`}
+                            >
+                              <div className="flex justify-between items-start">
+                                <p className={`text-sm ${!n.read ? 'font-bold text-gray-900' : 'font-medium text-gray-600'}`}>{n.message}</p>
+                                {!n.read && <span className="flex-shrink-0 ml-2 mt-1 h-2 w-2 rounded-full bg-blue-600 shadow-sm" />}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">{formatRelativeTime(n.createdAt)}</p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <span className="text-sm text-gray-700 font-medium ml-2">
                   {user.name} <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full uppercase ml-1">{user.role.replace('_', ' ')}</span>
                 </span>
                 <button

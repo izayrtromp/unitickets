@@ -1,6 +1,7 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken } = require('../middleware/auth');
+const { createNotification } = require('../utils/notify');
 const router = express.Router({ mergeParams: true });
 const prisma = new PrismaClient();
 
@@ -47,6 +48,19 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
       where: { id: ticketId },
       data: { updatedAt: new Date() }
     });
+
+    const usersToNotify = new Set();
+    if (ticket.submitterId !== req.user.id) usersToNotify.add(ticket.submitterId);
+    if (ticket.assignedToId && ticket.assignedToId !== req.user.id) usersToNotify.add(ticket.assignedToId);
+    
+    for (const uId of usersToNotify) {
+      await createNotification({
+        userId: uId, 
+        ticketId, 
+        type: 'COMMENT',
+        message: `New comment on ticket: ${ticket.title}`
+      });
+    }
 
     res.status(201).json(comment);
   } catch (error) {
