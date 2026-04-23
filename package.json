@@ -1,0 +1,16 @@
+{
+  "name": "ticketing-system-root",
+  "version": "1.0.0",
+  "description": "Root project to easily run frontend and backend together",
+  "scripts": {
+    "setup": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "db:init": "cd backend && npx prisma db push && node prisma/seed.js",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev": "npm run db:init && concurrently \"npm run dev:backend\" \"npm run dev:frontend\""
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
