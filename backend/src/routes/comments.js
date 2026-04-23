@@ -43,6 +43,11 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
       }
     });
 
+    await prisma.ticket.update({
+      where: { id: ticketId },
+      data: { updatedAt: new Date() }
+    });
+
     res.status(201).json(comment);
   } catch (error) {
     res.status(500).json({ error: 'Failed to add comment' });

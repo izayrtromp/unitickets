@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { formatLabel, formatRelativeTime } from '../utils/format';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [filterCategory, setFilterCategory] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [quickFilter, setQuickFilter] = useState('all');
 
   useEffect(() => {
     fetchStats();
@@ -25,7 +27,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTickets();
-  }, [filterStatus, filterCategory, filterPriority, searchQuery]);
+  }, [filterStatus, filterCategory, filterPriority, searchQuery, quickFilter]);
 
   const fetchStats = async () => {
     try {
@@ -43,6 +45,7 @@ const Dashboard = () => {
       if (filterCategory) params.append('category', filterCategory);
       if (filterPriority) params.append('priority', filterPriority);
       if (searchQuery) params.append('search', searchQuery);
+      if (quickFilter !== 'all') params.append('quickFilter', quickFilter);
 
       const ticketsRes = await api.get(`/tickets?${params.toString()}`);
       setTickets(ticketsRes.data);
@@ -79,8 +82,30 @@ const Dashboard = () => {
       )}
 
       <div className="flex justify-between items-center mt-8">
-        <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
-        <button onClick={() => setShowNewModal(true)} className="btn-primary">
+        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+          <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-md self-start">
+            <button 
+              onClick={() => setQuickFilter('open')} 
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'open' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Open
+            </button>
+            <button 
+              onClick={() => setQuickFilter('closed')} 
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'closed' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Closed
+            </button>
+            <button 
+              onClick={() => setQuickFilter('all')} 
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              All
+            </button>
+          </div>
+        </div>
+        <button onClick={() => setShowNewModal(true)} className="btn-primary flex-shrink-0">
           + New Ticket
         </button>
       </div>
@@ -127,16 +152,16 @@ const Dashboard = () => {
                   <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
                   <div className="ml-2 flex-shrink-0 flex">
                     <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100`}>
-                      {t.status}
+                      {formatLabel(t.status)}
                     </p>
                   </div>
                 </div>
                 <div className="mt-2 sm:flex sm:justify-between">
                   <div className="sm:flex text-sm text-gray-500">
-                    <p>Submitted by {t.submitter.name} • {t.category}</p>
+                    <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
                   </div>
                   <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <p>Priority: {t.priority}</p>
+                    <p>Priority: {formatLabel(t.priority)}</p>
                   </div>
                 </div>
               </Link>

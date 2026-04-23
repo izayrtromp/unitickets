@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
+import { formatRelativeTime, formatLabel } from '../utils/format';
 
 const TicketDetail = () => {
   const { id } = useParams();
@@ -25,7 +26,7 @@ const TicketDetail = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get('/users');
+      const res = await api.get('/users/staff');
       setUsers(res.data);
     } catch (err) {
       console.error(err);
@@ -97,9 +98,9 @@ const TicketDetail = () => {
   const allowedTransitions = {
     'NEW': ['IN_PROGRESS'],
     'IN_PROGRESS': ['WAITING', 'RESOLVED'],
-    'WAITING': ['IN_PROGRESS', 'RESOLVED'],
+    'WAITING': ['RESOLVED'],
     'RESOLVED': ['CLOSED'],
-    'CLOSED': []
+    'CLOSED': ['IN_PROGRESS']
   };
   const validNextStatuses = ticket ? (allowedTransitions[ticket.status] || []) : [];
 
@@ -114,11 +115,11 @@ const TicketDetail = () => {
           <div>
             <h3 className="text-xl leading-6 font-medium text-gray-900">{ticket.title}</h3>
             <p className="mt-1 max-w-2xl text-sm text-gray-500">
-              Submitted by {ticket.submitter.name} on {new Date(ticket.createdAt).toLocaleDateString()}
+              Submitted by {ticket.submitter.name} • Updated {formatRelativeTime(ticket.updatedAt)}
             </p>
           </div>
           <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-            {ticket.status}
+            {formatLabel(ticket.status)}
           </span>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
@@ -142,7 +143,7 @@ const TicketDetail = () => {
                     >
                       <option value="">Unassigned</option>
                       {users.filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
-                        <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
+                        <option key={u.id} value={u.id}>{u.name} ({formatLabel(u.role)})</option>
                       ))}
                     </select>
                     {selectedAssignee !== (ticket.assignedTo?.id || '') && (
@@ -184,7 +185,7 @@ const TicketDetail = () => {
                         disabled={isCurrent}
                         className={`px-3 py-1 text-xs rounded border ${isCurrent ? 'bg-gray-100 text-gray-800 cursor-default border-gray-300 font-semibold' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300 shadow-sm'}`}
                       >
-                        {status.replace('_', ' ')}
+                        {ticket.status === 'CLOSED' && status === 'IN_PROGRESS' ? 'Reopen Ticket' : status.replace('_', ' ')}
                       </button>
                     );
                   })}
@@ -207,14 +208,14 @@ const TicketDetail = () => {
               item.type === 'activity' ? (
                 <div key={`act-${item.id}`} className="text-xs text-gray-500 flex items-center space-x-2 px-2 py-1">
                   <span className="font-medium text-gray-700">{item.user?.name || 'Unknown'}</span>
-                  <span>{item.action}</span>
-                  <span className="text-gray-400">• {new Date(item.createdAt).toLocaleString()}</span>
+                  <span>{item.action.replace(/NEW|IN_PROGRESS|WAITING|RESOLVED|CLOSED/g, match => formatLabel(match))}</span>
+                  <span className="text-gray-400">• {formatRelativeTime(item.createdAt)}</span>
                 </div>
               ) : (
                 <div key={`com-${item.id}`} className={`p-4 rounded-lg bg-gray-50 border border-gray-100`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-gray-900">{item.user?.name || 'Unknown'} <span className="text-xs text-gray-500 font-normal ml-1">({item.user?.role || ''})</span></span>
-                    <span className="text-xs text-gray-500">{new Date(item.createdAt).toLocaleString()}</span>
+                    <span className="font-semibold text-gray-900">{item.user?.name || 'Unknown'} <span className="text-xs text-gray-500 font-normal ml-1">({formatLabel(item.user?.role || '')})</span></span>
+                    <span className="text-xs text-gray-500">{formatRelativeTime(item.createdAt)}</span>
                   </div>
                   <p className="whitespace-pre-wrap">{item.content}</p>
                 </div>

@@ -23,6 +23,11 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            {user?.role === 'ADMIN' && (
+              <Link to="/admin/users" className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                Users
+              </Link>
+            )}
             {user && (
               <>
                 <span className="text-sm text-gray-700 font-medium">

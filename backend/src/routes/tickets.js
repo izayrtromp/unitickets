@@ -7,14 +7,20 @@ const prisma = new PrismaClient();
 // Get all tickets (filtered by role)
 router.get('/', authenticateToken, async (req, res) => {
   try {
-    const { status, category, priority, search } = req.query;
+    const { status, category, priority, search, quickFilter } = req.query;
 
     const where = {};
     if (req.user.role === 'STUDENT') {
       where.submitterId = req.user.id;
     }
 
-    if (status) where.status = status;
+    if (status) {
+      where.status = status;
+    } else if (quickFilter === 'open') {
+      where.status = { not: 'CLOSED' };
+    } else if (quickFilter === 'closed') {
+      where.status = 'CLOSED';
+    }
     if (category) where.category = category;
     if (priority) where.priority = priority;
     
@@ -129,9 +135,9 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
       const allowedTransitions = {
         'NEW': ['IN_PROGRESS'],
         'IN_PROGRESS': ['WAITING', 'RESOLVED'],
-        'WAITING': ['IN_PROGRESS', 'RESOLVED'],
+        'WAITING': ['RESOLVED'],
         'RESOLVED': ['CLOSED'],
-        'CLOSED': []
+        'CLOSED': ['IN_PROGRESS']
       };
       
       const validNextStatuses = allowedTransitions[oldTicket.status] || [];
@@ -150,11 +156,16 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
     });
 
     if (status && status !== oldTicket.status) {
+      let actionText = `changed status to ${status}`;
+      if (oldTicket.status === 'CLOSED' && status === 'IN_PROGRESS') {
+        actionText = 'reopened ticket';
+      }
+
       await prisma.activity.create({
         data: {
           ticketId: ticket.id,
           userId: req.user.id,
-          action: `changed status to ${status}`
+          action: actionText
         }
       });
     }
