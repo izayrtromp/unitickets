@@ -61,7 +61,17 @@ const Navbar = () => {
   const handleNotificationClick = (n) => {
     if (!n.read) markAsRead(n.id);
     setShowDropdown(false);
-    if (n.ticketId) navigate(`/tickets/${n.ticketId}`);
+    if (n.ticketId) {
+      let url = `/tickets/${n.ticketId}`;
+      if (n.commentId) {
+        url += `?commentId=${n.commentId}`;
+      } else if (n.activityId) {
+        url += `?activityId=${n.activityId}`;
+      } else if (n.targetSection) {
+        url += `?section=${n.targetSection}`;
+      }
+      navigate(url);
+    }
   };
 
   const handleLogout = () => {

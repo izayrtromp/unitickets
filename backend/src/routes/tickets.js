@@ -158,14 +158,22 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
 
     if (status && status !== oldTicket.status) {
       let actionText = `changed status to ${status}`;
+      const activity = await prisma.activity.create({
+        data: {
+          ticketId: ticket.id,
+          userId: req.user.id,
+          action: actionText
+        }
+      });
+
       if (oldTicket.status === 'CLOSED' && status === 'IN_PROGRESS') {
-        actionText = 'reopened ticket';
         if (req.user.id !== oldTicket.submitterId) {
           await createNotification({
             userId: oldTicket.submitterId, 
             ticketId: ticket.id, 
             type: 'REOPENED',
-            message: `Your ticket '${ticket.title}' was reopened`
+            message: `Your ticket '${ticket.title}' was reopened`,
+            activityId: activity.id
           });
         }
       } else {
@@ -175,18 +183,11 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
             userId: oldTicket.submitterId, 
             ticketId: ticket.id, 
             type: 'STATUS',
-            message: `Your ticket '${ticket.title}' was moved to ${readableStatus}`
+            message: `Your ticket '${ticket.title}' was moved to ${readableStatus}`,
+            activityId: activity.id
           });
         }
       }
-
-      await prisma.activity.create({
-        data: {
-          ticketId: ticket.id,
-          userId: req.user.id,
-          action: actionText
-        }
-      });
     }
 
     if (assignedToId !== undefined && assignedToId !== oldTicket.assignedToId) {
@@ -214,7 +215,8 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
           userId: assignedToId, 
           ticketId: ticket.id, 
           type: 'ASSIGNED',
-          message: `You were assigned ticket: ${ticket.title}`
+          message: `You were assigned ticket: ${ticket.title}`,
+          targetSection: 'details'
         });
       }
     }

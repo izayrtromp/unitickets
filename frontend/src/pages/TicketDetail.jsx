@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
@@ -8,6 +8,7 @@ import { formatRelativeTime, formatLabel } from '../utils/format';
 const TicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   
   const [ticket, setTicket] = useState(null);
@@ -23,6 +24,33 @@ const TicketDetail = () => {
       fetchUsers();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!loading && ticket) {
+      const params = new URLSearchParams(location.search);
+      const commentId = params.get('commentId');
+      const activityId = params.get('activityId');
+      const section = params.get('section');
+      
+      let targetId = null;
+      if (commentId) targetId = `comment-${commentId}`;
+      else if (activityId) targetId = `activity-${activityId}`;
+      else if (section) targetId = `section-${section}`;
+
+      if (targetId) {
+        setTimeout(() => {
+          const el = document.getElementById(targetId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-blue-400', 'bg-blue-50', 'transition-all', 'duration-1000');
+            setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-blue-400', 'bg-blue-50');
+            }, 2500);
+          }
+        }, 150);
+      }
+    }
+  }, [loading, ticket, location.search]);
 
   const fetchUsers = async () => {
     try {
@@ -114,7 +142,7 @@ const TicketDetail = () => {
         <ArrowLeft className="w-4 h-4 mr-1" /> Back to Dashboard
       </button>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg" id="section-details">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-start">
           <div>
             <h3 className="text-xl leading-6 font-medium text-gray-900">{ticket.title}</h3>
@@ -200,7 +228,7 @@ const TicketDetail = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-white shadow sm:rounded-lg" id="section-activity">
         <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
           <h3 className="text-lg leading-6 font-medium text-gray-900">Activity & Comments</h3>
         </div>
@@ -210,13 +238,13 @@ const TicketDetail = () => {
           ) : (
             timeline.map(item => (
               item.type === 'activity' ? (
-                <div key={`act-${item.id}`} className="text-xs text-gray-500 flex items-center space-x-2 px-2 py-1">
+                <div id={`activity-${item.id}`} key={`act-${item.id}`} className="text-xs text-gray-500 flex items-center space-x-2 px-2 py-1 rounded transition-colors duration-500">
                   <span className="font-medium text-gray-700">{item.user?.name || 'Unknown'}</span>
                   <span>{item.action.replace(/NEW|IN_PROGRESS|WAITING|RESOLVED|CLOSED/g, match => formatLabel(match))}</span>
                   <span className="text-gray-400">• {formatRelativeTime(item.createdAt)}</span>
                 </div>
               ) : (
-                <div key={`com-${item.id}`} className={`p-4 rounded-lg bg-gray-50 border border-gray-100`}>
+                <div id={`comment-${item.id}`} key={`com-${item.id}`} className={`p-4 rounded-lg bg-gray-50 border border-gray-100 transition-colors duration-500`}>
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-semibold text-gray-900">{item.user?.name || 'Unknown'} <span className="text-xs text-gray-500 font-normal ml-1">({formatLabel(item.user?.role || '')})</span></span>
                     <span className="text-xs text-gray-500">{formatRelativeTime(item.createdAt)}</span>
@@ -227,7 +255,7 @@ const TicketDetail = () => {
             ))
           )}
         </div>
-        <div className="bg-gray-50 px-4 py-4 sm:px-6 border-t border-gray-200">
+        <div className="bg-gray-50 px-4 py-4 sm:px-6 border-t border-gray-200" id="section-comments">
           <form onSubmit={submitComment} className="flex flex-col space-y-3">
             <textarea
               rows="3"

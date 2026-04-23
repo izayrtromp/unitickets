@@ -16,6 +16,9 @@ router.get('/', authenticateToken, async (req, res) => {
         message: true,
         read: true,
         ticketId: true,
+        commentId: true,
+        activityId: true,
+        targetSection: true,
         createdAt: true
       }
     });

@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 router.get('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(users);
@@ -22,8 +22,8 @@ router.get('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => 
 router.get('/staff', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      where: { role: { in: ['CLASS_REP', 'ADMIN'] } },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      where: { role: { in: ['CLASS_REP', 'ADMIN'] }, isActive: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },
       orderBy: { name: 'asc' }
     });
     res.json(users);
@@ -59,7 +59,7 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
     
     const user = await prisma.user.create({
       data: { name: name.trim(), email: email.trim(), passwordHash, role },
-      select: { id: true, name: true, email: true, role: true, createdAt: true }
+      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true }
     });
     
     res.status(201).json(user);
@@ -76,11 +76,42 @@ router.put('/:id', authenticateToken, authorizeRoles('ADMIN'), async (req, res) 
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role },
-      select: { id: true, name: true, email: true, role: true }
+      select: { id: true, name: true, email: true, role: true, isActive: true }
     });
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
+// Deactivate user (Admin only)
+router.patch('/:id/deactivate', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({ error: 'Cannot deactivate your own account' });
+    }
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { isActive: false },
+      select: { id: true, name: true, email: true, role: true, isActive: true }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to deactivate user' });
+  }
+});
+
+// Reactivate user (Admin only)
+router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { isActive: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reactivate user' });
   }
 });
 

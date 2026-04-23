@@ -13,6 +13,7 @@ model User {
   email        String    @unique
   passwordHash String
   role         String    // STUDENT, CLASS_REP, ADMIN
+  isActive     Boolean   @default(true)
   createdAt    DateTime  @default(now())
 
   ticketsSubmitted Ticket[]  @relation("Submitter")
@@ -69,6 +70,9 @@ model Notification {
   id        String   @id @default(uuid())
   userId    String
   ticketId  String?
+  commentId String?
+  activityId String?
+  targetSection String?
   type      String
   message   String
   read      Boolean  @default(false)

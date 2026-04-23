@@ -58,7 +58,9 @@ router.post('/:id/comments', authenticateToken, async (req, res) => {
         userId: uId, 
         ticketId, 
         type: 'COMMENT',
-        message: `New comment on ticket: ${ticket.title}`
+        message: `New comment on ticket: ${ticket.title}`,
+        commentId: comment.id,
+        targetSection: 'comments'
       });
     }
 

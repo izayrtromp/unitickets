@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 import { formatLabel, formatRelativeTime } from '../utils/format';
 
 const AdminUsers = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -49,6 +51,16 @@ const AdminUsers = () => {
       fetchUsers();
     } catch (err) {
       setCreateError(err.response?.data?.error || 'Failed to create user.');
+    }
+  };
+
+  const handleToggleActive = async (userId, currentStatus) => {
+    try {
+      const endpoint = currentStatus ? 'deactivate' : 'reactivate';
+      await api.patch(`/users/${userId}/${endpoint}`);
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.error || `Failed to ${currentStatus ? 'deactivate' : 'reactivate'} user.`);
     }
   };
 
@@ -106,12 +118,14 @@ const AdminUsers = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {users.map((u) => (
-                  <tr key={u.id}>
+                  <tr key={u.id} className={!u.isActive ? "bg-gray-50 opacity-75" : ""}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -119,7 +133,24 @@ const AdminUsers = () => {
                         {formatLabel(u.role)}
                       </span>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {u.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {u.id !== currentUser?.id ? (
+                        <button 
+                          onClick={() => handleToggleActive(u.id, u.isActive)}
+                          className={`text-sm ${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}`}
+                        >
+                          {u.isActive ? 'Deactivate' : 'Reactivate'}
+                        </button>
+                      ) : (
+                        <span className="text-sm text-gray-400 italic">Current Account</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

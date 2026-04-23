@@ -14,6 +14,10 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({ error: 'This account has been deactivated' });
+    }
+
     const token = jwt.sign({ id: user.id, role: user.role, name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     
     // Omit password hash in response
