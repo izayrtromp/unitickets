@@ -31,6 +31,7 @@ model Ticket {
   id          String    @id @default(uuid())
   title       String
   category    String
+  type        String    @default("GENERAL_FEEDBACK") // BUG, FEATURE_REQUEST, GENERAL_FEEDBACK, ACADEMIC
   description String
   priority    String    // LOW, MEDIUM, HIGH, URGENT
   status      String    @default("NEW") // NEW, IN_PROGRESS, WAITING, RESOLVED, CLOSED

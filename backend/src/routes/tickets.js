@@ -84,12 +84,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
 // Create ticket (Students, Reps, Admins)
 router.post('/', authenticateToken, authorizeRoles('STUDENT', 'CLASS_REP', 'ADMIN'), async (req, res) => {
   try {
-    const { title, category, description, priority } = req.body;
+    const { title, category, description, priority, type } = req.body;
     const newTicket = await prisma.ticket.create({
       data: {
         title,
-        category,
+        category: category || 'Feedback',
         description,
+        type: type || 'GENERAL_FEEDBACK',
         priority: priority || 'MEDIUM',
         status: 'NEW',
         submitterId: req.user.id

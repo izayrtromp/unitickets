@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Ticket, LogOut, Bell } from 'lucide-react';
+import { Ticket, LogOut, Bell, AlertCircle } from 'lucide-react';
 import api from '../api/axios';
 import { formatRelativeTime } from '../utils/format';
+import ReportIssueModal from './ReportIssueModal';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [error, setError] = useState('');
   const dropdownRef = useRef(null);
 
@@ -116,6 +118,13 @@ const Navbar = () => {
             )}
             {user && (
               <>
+                <button
+                  onClick={() => setShowReportModal(true)}
+                  className="text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-md text-sm font-medium border border-gray-200 shadow-sm bg-white hover:bg-gray-50 flex items-center mr-2"
+                >
+                  <AlertCircle className="w-4 h-4 mr-1.5" />
+                  Report Issue
+                </button>
                 <div className="relative" ref={dropdownRef}>
                   <button 
                     onClick={() => setShowDropdown(!showDropdown)}
@@ -178,6 +187,10 @@ const Navbar = () => {
           {error}
         </div>
       )}
+      <ReportIssueModal 
+        isOpen={showReportModal} 
+        onClose={() => setShowReportModal(false)} 
+      />
     </nav>
   );
 };
