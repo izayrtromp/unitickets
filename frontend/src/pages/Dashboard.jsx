@@ -7,9 +7,13 @@ import { formatLabel, formatRelativeTime } from '../utils/format';
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { user } = useAuth();
   
   const [showNewModal, setShowNewModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState('General');
   const [newDesc, setNewDesc] = useState('');
@@ -33,12 +37,13 @@ const Dashboard = () => {
     try {
       const statsRes = await api.get('/dashboard/stats');
       setStats(statsRes.data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to fetch stats');
     }
   };
 
   const fetchTickets = async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (filterStatus) params.append('status', filterStatus);
@@ -49,13 +54,17 @@ const Dashboard = () => {
 
       const ticketsRes = await api.get(`/tickets?${params.toString()}`);
       setTickets(ticketsRes.data);
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to fetch tickets');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCreateTicket = async (e) => {
     e.preventDefault();
+    setIsCreating(true);
+    setCreateError('');
     try {
       await api.post('/tickets', {
         title: newTitle, category: newCategory, description: newDesc, priority: newPriority
@@ -65,7 +74,9 @@ const Dashboard = () => {
       fetchTickets();
       setNewTitle(''); setNewDesc('');
     } catch (err) {
-      console.error(err);
+      setCreateError(err.response?.data?.message || err.response?.data?.error || 'Failed to create ticket');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -143,32 +154,48 @@ const Dashboard = () => {
         </select>
       </div>
 
+      {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
+
       <div className="bg-white shadow overflow-hidden sm:rounded-md mt-4">
         <ul className="divide-y divide-gray-200">
-          {tickets.map((t) => (
-            <li key={t.id}>
-              <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 transition p-4 sm:px-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
-                  <div className="ml-2 flex-shrink-0 flex">
-                    <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100`}>
-                      {formatLabel(t.status)}
-                    </p>
-                  </div>
+          {loading ? (
+            <div className="animate-pulse divide-y divide-gray-200">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="p-4 sm:px-6">
+                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                 </div>
-                <div className="mt-2 sm:flex sm:justify-between">
-                  <div className="sm:flex text-sm text-gray-500">
-                    <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
+              ))}
+            </div>
+          ) : tickets.length === 0 ? (
+            <div className="p-6 text-center text-gray-500">
+              {searchQuery || filterStatus || filterCategory || filterPriority || quickFilter !== 'all' 
+                ? "No results match your search." 
+                : "No tickets found."}
+            </div>
+          ) : (
+            tickets.map((t) => (
+              <li key={t.id}>
+                <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 transition p-4 sm:px-6">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
+                    <div className="ml-2 flex-shrink-0 flex">
+                      <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100`}>
+                        {formatLabel(t.status)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                    <p>Priority: {formatLabel(t.priority)}</p>
+                  <div className="mt-2 sm:flex sm:justify-between">
+                    <div className="sm:flex text-sm text-gray-500">
+                      <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
+                    </div>
+                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                      <p>Priority: {formatLabel(t.priority)}</p>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            </li>
-          ))}
-          {tickets.length === 0 && (
-            <div className="p-6 text-center text-gray-500">No tickets found.</div>
+                </Link>
+              </li>
+            ))
           )}
         </ul>
       </div>
@@ -177,15 +204,16 @@ const Dashboard = () => {
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg p-6 max-w-lg w-full">
             <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Submit New Ticket</h3>
+            {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
             <form onSubmit={handleCreateTicket} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
-                <input required value={newTitle} onChange={e=>setNewTitle(e.target.value)} className="input-field" />
+                <input required disabled={isCreating} value={newTitle} onChange={e=>setNewTitle(e.target.value)} className="input-field" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Category</label>
-                  <select value={newCategory} onChange={e=>setNewCategory(e.target.value)} className="input-field">
+                  <select disabled={isCreating} value={newCategory} onChange={e=>setNewCategory(e.target.value)} className="input-field">
                     <option>General</option>
                     <option>Academic</option>
                     <option>Facility</option>
@@ -194,7 +222,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Priority</label>
-                  <select value={newPriority} onChange={e=>setNewPriority(e.target.value)} className="input-field">
+                  <select disabled={isCreating} value={newPriority} onChange={e=>setNewPriority(e.target.value)} className="input-field">
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="HIGH">High</option>
@@ -204,11 +232,13 @@ const Dashboard = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea required rows={4} value={newDesc} onChange={e=>setNewDesc(e.target.value)} className="input-field" />
+                <textarea required disabled={isCreating} rows={4} value={newDesc} onChange={e=>setNewDesc(e.target.value)} className="input-field" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={()=>setShowNewModal(false)} className="btn-secondary">Cancel</button>
-                <button type="submit" className="btn-primary">Submit</button>
+                <button type="button" disabled={isCreating} onClick={()=>setShowNewModal(false)} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={isCreating} className="btn-primary">
+                  {isCreating ? 'Submitting...' : 'Submit'}
+                </button>
               </div>
             </form>
           </div>

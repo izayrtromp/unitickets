@@ -10,7 +10,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [error, setError] = useState('');
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!error) return;
+    const t = setTimeout(() => setError(''), 3000);
+    return () => clearTimeout(t);
+  }, [error]);
 
   useEffect(() => {
     if (user) {
@@ -36,7 +43,7 @@ const Navbar = () => {
       const res = await api.get('/notifications');
       setNotifications(res.data);
     } catch (err) {
-      console.error(err);
+      // silently fail for polling
     }
   };
 
@@ -45,7 +52,7 @@ const Navbar = () => {
       await api.patch(`/notifications/${id}/read`);
       setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to mark notification as read');
     }
   };
 
@@ -54,7 +61,7 @@ const Navbar = () => {
       await api.patch('/notifications/read-all');
       setNotifications(notifications.map(n => ({ ...n, read: true })));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to mark all as read');
     }
   };
 
@@ -161,6 +168,11 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+      {error && (
+        <div className="absolute top-16 right-4 bg-red-50 text-red-600 px-4 py-2 rounded text-sm shadow-md z-50">
+          {error}
+        </div>
+      )}
     </nav>
   );
 };

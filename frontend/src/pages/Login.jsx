@@ -7,17 +7,21 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoggingIn(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError('Invalid credentials');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Invalid credentials');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -45,7 +49,8 @@ const Login = () => {
               <input
                 type="email"
                 required
-                className="input-field"
+                disabled={isLoggingIn}
+                className="input-field disabled:opacity-50"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -56,15 +61,16 @@ const Login = () => {
               <input
                 type="password"
                 required
-                className="input-field"
+                disabled={isLoggingIn}
+                className="input-field disabled:opacity-50"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
             <div>
-              <button type="submit" className="w-full btn-primary py-3">
-                Sign in
+              <button type="submit" disabled={isLoggingIn} className="w-full btn-primary py-3 disabled:opacity-50">
+                {isLoggingIn ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>

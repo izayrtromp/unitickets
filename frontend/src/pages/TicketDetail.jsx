@@ -25,6 +25,20 @@ const TicketDetail = () => {
   const [taskDueDate, setTaskDueDate] = useState('');
   const [taskSuccess, setTaskSuccess] = useState('');
   const [taskError, setTaskError] = useState('');
+  
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [isPostingComment, setIsPostingComment] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+
+  useEffect(() => {
+    if (!taskSuccess) return;
+    const t = setTimeout(() => {
+      setTaskSuccess('');
+      setShowTaskModal(false);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [taskSuccess]);
 
   useEffect(() => {
     fetchTicket();
@@ -82,51 +96,64 @@ const TicketDetail = () => {
   };
 
   const handleStatusChange = async (newStatus) => {
+    setIsUpdatingStatus(true);
     try {
       await api.put(`/tickets/${id}`, { status: newStatus });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update ticket status');
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
   const handleAssignToMe = async () => {
+    setIsAssigning(true);
     try {
       await api.put(`/tickets/${id}`, { assignedToId: user.id });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to assign ticket');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
   const handleAssign = async () => {
+    setIsAssigning(true);
     try {
       await api.put(`/tickets/${id}`, { assignedToId: selectedAssignee || null });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update assignment');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
   const submitComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
+    setIsPostingComment(true);
     try {
       await api.post(`/tickets/${id}/comments`, { content: commentText });
       setCommentText('');
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
     } catch (err) {
-      console.error(err);
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to post comment');
+    } finally {
+      setIsPostingComment(false);
     }
   };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
     setTaskError('');
+    setIsCreatingTask(true);
     try {
       await api.post('/tasks', {
         title: taskTitle,
@@ -136,12 +163,10 @@ const TicketDetail = () => {
         ticketId: ticket.id
       });
       setTaskSuccess('Task created successfully');
-      setTimeout(() => {
-        setTaskSuccess('');
-        setShowTaskModal(false);
-      }, 2000);
     } catch (err) {
-      setTaskError(err.response?.data?.error || 'Failed to create task');
+      setTaskError(err.response?.data?.message || err.response?.data?.error || 'Failed to create task');
+    } finally {
+      setIsCreatingTask(false);
     }
   };
   
@@ -155,7 +180,19 @@ const TicketDetail = () => {
     setShowTaskModal(true);
   };
 
-  if (loading) return <div className="p-8 text-center">Loading ticket details...</div>;
+  if (loading) return (
+    <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
+      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+      <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6 space-y-4">
+        <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        <div className="border-t border-gray-200 pt-4 space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+    </div>
+  );
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!ticket) return null;
 
@@ -225,13 +262,13 @@ const TicketDetail = () => {
                       ))}
                     </select>
                     {selectedAssignee !== (ticket.assignedTo?.id || '') && (
-                      <button onClick={handleAssign} className="btn-primary py-1 px-3 text-xs whitespace-nowrap">
-                        {selectedAssignee ? 'Assign / Reassign' : 'Unassign'}
+                      <button onClick={handleAssign} disabled={isAssigning} className="btn-primary py-1 px-3 text-xs whitespace-nowrap disabled:opacity-50">
+                        {isAssigning ? 'Assigning...' : (selectedAssignee ? 'Assign / Reassign' : 'Unassign')}
                       </button>
                     )}
                     {!ticket.assignedTo && selectedAssignee === '' && (
-                      <button onClick={handleAssignToMe} className="text-primary-600 hover:text-primary-800 font-medium text-sm ml-2 whitespace-nowrap">
-                        Assign to me
+                      <button onClick={handleAssignToMe} disabled={isAssigning} className="text-primary-600 hover:text-primary-800 font-medium text-sm ml-2 whitespace-nowrap disabled:opacity-50">
+                        {isAssigning ? 'Assigning...' : 'Assign to me'}
                       </button>
                     )}
                   </div>
@@ -260,10 +297,10 @@ const TicketDetail = () => {
                       <button 
                         key={status}
                         onClick={() => handleStatusChange(status)}
-                        disabled={isCurrent}
-                        className={`px-3 py-1 text-xs rounded border ${isCurrent ? 'bg-gray-100 text-gray-800 cursor-default border-gray-300 font-semibold' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300 shadow-sm'}`}
+                        disabled={isCurrent || isUpdatingStatus}
+                        className={`px-3 py-1 text-xs rounded border disabled:opacity-50 ${isCurrent ? 'bg-gray-100 text-gray-800 cursor-default border-gray-300 font-semibold' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300 shadow-sm'}`}
                       >
-                        {ticket.status === 'CLOSED' && status === 'IN_PROGRESS' ? 'Reopen Ticket' : status.replace('_', ' ')}
+                        {isUpdatingStatus && !isCurrent ? 'Updating...' : (ticket.status === 'CLOSED' && status === 'IN_PROGRESS' ? 'Reopen Ticket' : status.replace('_', ' '))}
                       </button>
                     );
                   })}
@@ -305,13 +342,16 @@ const TicketDetail = () => {
           <form onSubmit={submitComment} className="flex flex-col space-y-3">
             <textarea
               rows="3"
-              className="input-field"
+              className="input-field disabled:opacity-50"
               placeholder="Add a comment or update..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
+              disabled={isPostingComment}
             />
             <div className="flex justify-end">
-              <button type="submit" className="btn-primary" disabled={!commentText.trim()}>Post Comment</button>
+              <button type="submit" className="btn-primary disabled:opacity-50" disabled={!commentText.trim() || isPostingComment}>
+                {isPostingComment ? 'Posting...' : 'Post Comment'}
+              </button>
             </div>
           </form>
         </div>
@@ -328,15 +368,15 @@ const TicketDetail = () => {
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Task Title</label>
-                <input type="text" required value={taskTitle} onChange={e => setTaskTitle(e.target.value)} className="input-field mt-1 w-full" />
+                <input type="text" required disabled={isCreatingTask} value={taskTitle} onChange={e => setTaskTitle(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Description</label>
-                <textarea rows="3" value={taskDesc} onChange={e => setTaskDesc(e.target.value)} className="input-field mt-1 w-full"></textarea>
+                <textarea rows="3" disabled={isCreatingTask} value={taskDesc} onChange={e => setTaskDesc(e.target.value)} className="input-field mt-1 w-full"></textarea>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Assign To</label>
-                <select required value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)} className="input-field mt-1 w-full">
+                <select required disabled={isCreatingTask} value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)} className="input-field mt-1 w-full">
                   <option value="">Select Assignee...</option>
                   {users.filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
                     <option key={u.id} value={u.id}>{u.name} ({formatLabel(u.role)})</option>
@@ -345,11 +385,13 @@ const TicketDetail = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Due Date (Optional)</label>
-                <input type="date" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} className="input-field mt-1 w-full" />
+                <input type="date" disabled={isCreatingTask} value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-                <button type="submit" className="btn-primary">Create Task</button>
+                <button type="button" disabled={isCreatingTask} onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={isCreatingTask} className="btn-primary disabled:opacity-50">
+                  {isCreatingTask ? 'Creating...' : 'Create Task'}
+                </button>
               </div>
             </form>
           </div>
