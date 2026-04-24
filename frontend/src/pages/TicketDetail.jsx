@@ -227,7 +227,11 @@ const TicketDetail = () => {
       await api.post(`/meetings/${selectedMeeting}/agenda`, { ticketId: ticket.id });
       setAgendaSuccess('Added to meeting agenda');
     } catch (err) {
-      setAgendaError(err.response?.data?.message || err.response?.data?.error || 'Failed to add to agenda');
+      if (err.response?.status === 409) {
+        setAgendaError('This ticket is already on that meeting agenda.');
+      } else {
+        setAgendaError(err.response?.data?.message || err.response?.data?.error || 'Failed to add to agenda');
+      }
     } finally {
       setIsAddingToAgenda(false);
     }

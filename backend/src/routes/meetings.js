@@ -13,7 +13,7 @@ router.get('/', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), async (
       orderBy: { meetingDate: 'desc' },
       include: {
         createdBy: { select: { id: true, name: true, role: true } },
-        _count: { select: { agendaItems: true } },
+        agendaItems: { select: { status: true } },
       },
     });
     res.json(meetings);
@@ -38,8 +38,7 @@ router.get('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
                 assignedTo: { select: { id: true, name: true } }
               }
             }
-          },
-          orderBy: { createdAt: 'asc' } // Ensure stable order
+          }
         }
       }
     });
@@ -188,7 +187,6 @@ router.patch('/:meetingId/agenda/:itemId', authenticateToken, authorizeRoles('CL
       data
     });
 
-    // Notify if status changed to one of the actionable ones
     if (status && status !== oldItem.status && ['DISCUSSED', 'FOLLOW_UP_REQUIRED', 'RESOLVED'].includes(status)) {
       await createNotification({
         userId: oldItem.ticket.submitterId,

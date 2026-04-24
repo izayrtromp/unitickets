@@ -19,6 +19,8 @@ const MeetingDetail = () => {
   // Edit Meeting State
   const [isEditingMeeting, setIsEditingMeeting] = useState(false);
   const [editTitle, setEditTitle] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editTime, setEditTime] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editNotes, setEditNotes] = useState('');
   const [isSavingMeeting, setIsSavingMeeting] = useState(false);
@@ -54,6 +56,18 @@ const MeetingDetail = () => {
       const response = await api.get(`/meetings/${id}`);
       setMeeting(response.data);
       setEditTitle(response.data.title);
+      
+      const md = new Date(response.data.meetingDate);
+      if (!isNaN(md.getTime())) {
+        const year = md.getFullYear();
+        const month = String(md.getMonth() + 1).padStart(2, '0');
+        const day = String(md.getDate()).padStart(2, '0');
+        const hours = String(md.getHours()).padStart(2, '0');
+        const mins = String(md.getMinutes()).padStart(2, '0');
+        setEditDate(`${year}-${month}-${day}`);
+        setEditTime(`${hours}:${mins}`);
+      }
+
       setEditLocation(response.data.location || '');
       setEditNotes(response.data.notes || '');
     } catch (err) {
@@ -77,11 +91,18 @@ const MeetingDetail = () => {
     setIsSavingMeeting(true);
     setError('');
     try {
-      await api.patch(`/meetings/${id}`, {
+      const payload = {
         title: editTitle,
         location: editLocation,
         notes: editNotes
-      });
+      };
+      
+      if (editDate && editTime) {
+        const localDate = new Date(`${editDate}T${editTime}:00`);
+        payload.meetingDate = localDate.toISOString();
+      }
+
+      await api.patch(`/meetings/${id}`, payload);
       setSuccess('Meeting updated successfully');
       setIsEditingMeeting(false);
       fetchMeeting();
@@ -167,6 +188,21 @@ const MeetingDetail = () => {
     return status ? status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : '';
   };
 
+  const getSortedAgendaItems = () => {
+    if (!meeting?.agendaItems) return [];
+    const statusOrder = {
+      'PENDING': 1,
+      'FOLLOW_UP_REQUIRED': 2,
+      'DISCUSSED': 3,
+      'RESOLVED': 4
+    };
+    return [...meeting.agendaItems].sort((a, b) => {
+      const orderA = statusOrder[a.status] || 99;
+      const orderB = statusOrder[b.status] || 99;
+      return orderA - orderB;
+    });
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto space-y-6 animate-pulse">
@@ -202,6 +238,16 @@ const MeetingDetail = () => {
               <label className="block text-sm font-medium text-gray-700">Meeting Title</label>
               <input type="text" required value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="input-field mt-1 w-full" disabled={isSavingMeeting} />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date</label>
+                <input type="date" required value={editDate} onChange={(e) => setEditDate(e.target.value)} className="input-field mt-1 w-full" disabled={isSavingMeeting} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Time</label>
+                <input type="time" required value={editTime} onChange={(e) => setEditTime(e.target.value)} className="input-field mt-1 w-full" disabled={isSavingMeeting} />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Location</label>
               <input type="text" value={editLocation} onChange={(e) => setEditLocation(e.target.value)} className="input-field mt-1 w-full" disabled={isSavingMeeting} />
@@ -234,6 +280,11 @@ const MeetingDetail = () => {
                     {meeting.location}
                   </span>
                 )}
+                {meeting.createdBy && (
+                  <span className="flex items-center text-gray-500">
+                    Created by: {meeting.createdBy.name}
+                  </span>
+                )}
               </div>
               {meeting.notes && (
                 <div className="mt-4 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-100 whitespace-pre-wrap">
@@ -253,11 +304,11 @@ const MeetingDetail = () => {
 
         {meeting.agendaItems.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            No agenda items yet. Add tickets to this meeting from the ticket details page.
+            No agenda items yet. Add tickets to this meeting from the Ticket Detail page.
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
-            {meeting.agendaItems.map((item, index) => (
+            {getSortedAgendaItems().map((item, index) => (
               <li key={item.id} className="p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -280,9 +331,9 @@ const MeetingDetail = () => {
                   {editingItemId !== item.id && (
                     <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                       item.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
-                      item.status === 'FOLLOW_UP_REQUIRED' ? 'bg-yellow-100 text-yellow-800' :
+                      item.status === 'FOLLOW_UP_REQUIRED' ? 'bg-orange-100 text-orange-800' :
                       item.status === 'DISCUSSED' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
+                      'bg-gray-100 text-gray-600'
                     }`}>
                       {formatTicketStatus(item.status)}
                     </span>

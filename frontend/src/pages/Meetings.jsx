@@ -49,13 +49,13 @@ const Meetings = () => {
     setIsCreating(true);
     setError('');
 
-    // Combine date and time
-    const meetingDateStr = `${newDate}T${newTime}:00`;
-
     try {
+      const localDate = new Date(`${newDate}T${newTime}:00`);
+      const isoString = localDate.toISOString();
+
       await api.post('/meetings', {
         title: newTitle,
-        meetingDate: meetingDateStr,
+        meetingDate: isoString,
         location: newLocation,
         notes: newNotes
       });
@@ -99,7 +99,26 @@ const Meetings = () => {
     if (filter === 'all') return true;
     const upcoming = isUpcoming(m.meetingDate);
     return filter === 'upcoming' ? upcoming : !upcoming;
+  }).sort((a, b) => {
+    if (filter === 'all') {
+      const aUpcoming = isUpcoming(a.meetingDate);
+      const bUpcoming = isUpcoming(b.meetingDate);
+      if (aUpcoming && !bUpcoming) return -1;
+      if (!aUpcoming && bUpcoming) return 1;
+    }
+    return new Date(b.meetingDate) - new Date(a.meetingDate);
   });
+
+  const getStats = (agendaItems) => {
+    if (!agendaItems || agendaItems.length === 0) return null;
+    return {
+      total: agendaItems.length,
+      pending: agendaItems.filter(i => i.status === 'PENDING').length,
+      discussed: agendaItems.filter(i => i.status === 'DISCUSSED').length,
+      followUp: agendaItems.filter(i => i.status === 'FOLLOW_UP_REQUIRED').length,
+      resolved: agendaItems.filter(i => i.status === 'RESOLVED').length,
+    };
+  };
 
   return (
     <div className="space-y-6">
@@ -175,13 +194,22 @@ const Meetings = () => {
                           </span>
                         )}
                         <span className="hidden sm:inline">
-                          • {meeting._count.agendaItems} agenda item{meeting._count.agendaItems !== 1 && 's'}
+                          • {meeting.agendaItems?.length === 0 ? '0 agenda items' : (
+                            <span>
+                              {meeting.agendaItems?.length} items 
+                              {getStats(meeting.agendaItems) && (
+                                <span className="text-xs ml-1 text-gray-400">
+                                  ({getStats(meeting.agendaItems).pending} pending)
+                                </span>
+                              )}
+                            </span>
+                          )}
                         </span>
                       </div>
                     </Link>
                   </div>
                   <div className="flex items-center space-x-4">
-                    <Link to={`/meetings/${meeting.id}`} className="btn-secondary py-1 px-3 text-xs">
+                    <Link to={`/meetings/${meeting.id}`} className="btn-primary py-1 px-4 text-sm shadow-sm font-medium">
                       View
                     </Link>
                     {user?.role === 'ADMIN' && (
