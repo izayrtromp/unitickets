@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import TicketDetail from './pages/TicketDetail';
 import AdminUsers from './pages/AdminUsers';
 import Tasks from './pages/Tasks';
+import Meetings from './pages/Meetings';
+import MeetingDetail from './pages/MeetingDetail';
 
 const PrivateRoute = ({ children, roles }) => {
   const { user } = useAuth();
@@ -38,6 +40,8 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="tickets/:id" element={<TicketDetail />} />
           <Route path="tasks" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><Tasks /></PrivateRoute>} />
+          <Route path="meetings" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><Meetings /></PrivateRoute>} />
+          <Route path="meetings/:id" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><MeetingDetail /></PrivateRoute>} />
           <Route path="admin/users" element={<PrivateRoute roles={['ADMIN']}><AdminUsers /></PrivateRoute>} />
         </Route>
       </Routes>

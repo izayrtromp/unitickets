@@ -100,9 +100,14 @@ const Navbar = () => {
           </div>
           <div className="flex items-center space-x-4">
             {['CLASS_REP', 'ADMIN'].includes(user?.role) && (
-              <Link to="/tasks" className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
-                Tasks
-              </Link>
+              <>
+                <Link to="/tasks" className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Tasks
+                </Link>
+                <Link to="/meetings" className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                  Meetings
+                </Link>
+              </>
             )}
             {user?.role === 'ADMIN' && (
               <Link to="/admin/users" className="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">

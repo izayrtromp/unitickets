@@ -31,6 +31,13 @@ const TicketDetail = () => {
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
+  const [showAgendaModal, setShowAgendaModal] = useState(false);
+  const [meetings, setMeetings] = useState([]);
+  const [selectedMeeting, setSelectedMeeting] = useState('');
+  const [isAddingToAgenda, setIsAddingToAgenda] = useState(false);
+  const [agendaSuccess, setAgendaSuccess] = useState('');
+  const [agendaError, setAgendaError] = useState('');
+
   useEffect(() => {
     if (!taskSuccess) return;
     const t = setTimeout(() => {
@@ -44,8 +51,18 @@ const TicketDetail = () => {
     fetchTicket();
     if (['CLASS_REP', 'ADMIN'].includes(user.role)) {
       fetchUsers();
+      fetchUpcomingMeetings();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (!agendaSuccess) return;
+    const t = setTimeout(() => {
+      setAgendaSuccess('');
+      setShowAgendaModal(false);
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [agendaSuccess]);
 
   useEffect(() => {
     if (!loading && ticket) {
@@ -78,6 +95,17 @@ const TicketDetail = () => {
     try {
       const res = await api.get('/users/staff');
       setUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchUpcomingMeetings = async () => {
+    try {
+      const res = await api.get('/meetings');
+      // Filter only upcoming meetings
+      const upcoming = res.data.filter(m => new Date(m.meetingDate) > new Date());
+      setMeetings(upcoming);
     } catch (err) {
       console.error(err);
     }
@@ -180,6 +208,31 @@ const TicketDetail = () => {
     setShowTaskModal(true);
   };
 
+  const openAgendaModal = () => {
+    setSelectedMeeting('');
+    setAgendaError('');
+    setAgendaSuccess('');
+    setShowAgendaModal(true);
+  };
+
+  const handleAddToAgenda = async (e) => {
+    e.preventDefault();
+    if (!selectedMeeting) {
+      setAgendaError('Please select a meeting');
+      return;
+    }
+    setIsAddingToAgenda(true);
+    setAgendaError('');
+    try {
+      await api.post(`/meetings/${selectedMeeting}/agenda`, { ticketId: ticket.id });
+      setAgendaSuccess('Added to meeting agenda');
+    } catch (err) {
+      setAgendaError(err.response?.data?.message || err.response?.data?.error || 'Failed to add to agenda');
+    } finally {
+      setIsAddingToAgenda(false);
+    }
+  };
+
   if (loading) return (
     <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
       <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -228,9 +281,14 @@ const TicketDetail = () => {
           </div>
           <div className="flex items-center space-x-3">
             {['CLASS_REP', 'ADMIN'].includes(user.role) && (
-              <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
-                Create Task
-              </button>
+              <>
+                <button onClick={openAgendaModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+                  Add to Agenda
+                </button>
+                <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+                  Create Task
+                </button>
+              </>
             )}
             <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
               {formatLabel(ticket.status)}
@@ -391,6 +449,47 @@ const TicketDetail = () => {
                 <button type="button" disabled={isCreatingTask} onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
                 <button type="submit" disabled={isCreatingTask} className="btn-primary disabled:opacity-50">
                   {isCreatingTask ? 'Creating...' : 'Create Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Agenda Modal */}
+      {showAgendaModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Add to Meeting Agenda</h3>
+            {agendaError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{agendaError}</div>}
+            {agendaSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{agendaSuccess}</div>}
+            
+            <form onSubmit={handleAddToAgenda} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Select Upcoming Meeting</label>
+                {meetings.length === 0 ? (
+                  <p className="text-sm text-gray-500 mt-2">No upcoming meetings available. Create one from the Meetings page.</p>
+                ) : (
+                  <select 
+                    required 
+                    disabled={isAddingToAgenda} 
+                    value={selectedMeeting} 
+                    onChange={e => setSelectedMeeting(e.target.value)} 
+                    className="input-field mt-1 w-full"
+                  >
+                    <option value="">Select a meeting...</option>
+                    {meetings.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {new Date(m.meetingDate).toLocaleDateString()} - {m.title}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button type="button" disabled={isAddingToAgenda} onClick={() => setShowAgendaModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={isAddingToAgenda || meetings.length === 0} className="btn-primary disabled:opacity-50">
+                  {isAddingToAgenda ? 'Adding...' : 'Add to Agenda'}
                 </button>
               </div>
             </form>

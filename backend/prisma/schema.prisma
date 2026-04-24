@@ -24,6 +24,7 @@ model User {
   notifications    Notification[]
   tasksAssigned    Task[]    @relation("TaskAssignee")
   tasksCreated     Task[]    @relation("TaskCreator")
+  meetingsCreated  Meeting[] @relation("MeetingCreator")
 }
 
 model Ticket {
@@ -46,6 +47,7 @@ model Ticket {
   activities   Activity[]
   notifications Notification[]
   tasks        Task[]
+  agendaItems  MeetingAgendaItem[]
 }
 
 model Comment {
@@ -105,4 +107,35 @@ model Task {
   
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model Meeting {
+  id          String   @id @default(uuid())
+  title       String
+  meetingDate DateTime
+  location    String?
+  notes       String?
+  
+  createdById String
+  createdBy   User     @relation("MeetingCreator", fields: [createdById], references: [id])
+  
+  agendaItems MeetingAgendaItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MeetingAgendaItem {
+  id              String   @id @default(uuid())
+  meetingId       String
+  meeting         Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  
+  ticketId        String
+  ticket          Ticket   @relation(fields: [ticketId], references: [id])
+  
+  discussionNotes String?
+  outcome         String?
+  status          String   @default("PENDING") // PENDING, DISCUSSED, FOLLOW_UP_REQUIRED, RESOLVED
+  
+  @@unique([meetingId, ticketId])
 }
