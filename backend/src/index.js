@@ -15,6 +15,7 @@ const commentRoutes = require('./routes/comments');
 const dashboardRoutes = require('./routes/dashboard');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
+const taskRoutes = require('./routes/tasks');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -22,6 +23,7 @@ app.use('/api/tickets', commentRoutes); // comments nested under tickets
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/tasks', taskRoutes);
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {

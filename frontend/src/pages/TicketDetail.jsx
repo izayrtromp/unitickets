@@ -18,6 +18,14 @@ const TicketDetail = () => {
   const [users, setUsers] = useState([]);
   const [selectedAssignee, setSelectedAssignee] = useState('');
 
+  const [showTaskModal, setShowTaskModal] = useState(false);
+  const [taskTitle, setTaskTitle] = useState('');
+  const [taskDesc, setTaskDesc] = useState('');
+  const [taskAssignee, setTaskAssignee] = useState('');
+  const [taskDueDate, setTaskDueDate] = useState('');
+  const [taskSuccess, setTaskSuccess] = useState('');
+  const [taskError, setTaskError] = useState('');
+
   useEffect(() => {
     fetchTicket();
     if (['CLASS_REP', 'ADMIN'].includes(user.role)) {
@@ -116,6 +124,37 @@ const TicketDetail = () => {
     }
   };
 
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+    setTaskError('');
+    try {
+      await api.post('/tasks', {
+        title: taskTitle,
+        description: taskDesc,
+        assignedToId: taskAssignee,
+        dueDate: taskDueDate || null,
+        ticketId: ticket.id
+      });
+      setTaskSuccess('Task created successfully');
+      setTimeout(() => {
+        setTaskSuccess('');
+        setShowTaskModal(false);
+      }, 2000);
+    } catch (err) {
+      setTaskError(err.response?.data?.error || 'Failed to create task');
+    }
+  };
+  
+  const openTaskModal = () => {
+    setTaskTitle(ticket.title);
+    setTaskDesc(`Follow-up action for ticket #${ticket.id}`);
+    setTaskAssignee(ticket.assignedTo?.id || user.id);
+    setTaskDueDate('');
+    setTaskError('');
+    setTaskSuccess('');
+    setShowTaskModal(true);
+  };
+
   if (loading) return <div className="p-8 text-center">Loading ticket details...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!ticket) return null;
@@ -150,9 +189,16 @@ const TicketDetail = () => {
               Submitted by {ticket.submitter.name} • Updated {formatRelativeTime(ticket.updatedAt)}
             </p>
           </div>
-          <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-            {formatLabel(ticket.status)}
-          </span>
+          <div className="flex items-center space-x-3">
+            {['CLASS_REP', 'ADMIN'].includes(user.role) && (
+              <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+                Create Task
+              </button>
+            )}
+            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+              {formatLabel(ticket.status)}
+            </span>
+          </div>
         </div>
         <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
           <dl className="sm:divide-y sm:divide-gray-200">
@@ -270,6 +316,45 @@ const TicketDetail = () => {
           </form>
         </div>
       </div>
+
+      {/* Task Modal */}
+      {showTaskModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Create Task from Ticket</h3>
+            {taskError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{taskError}</div>}
+            {taskSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{taskSuccess}</div>}
+            
+            <form onSubmit={handleCreateTask} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Task Title</label>
+                <input type="text" required value={taskTitle} onChange={e => setTaskTitle(e.target.value)} className="input-field mt-1 w-full" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea rows="3" value={taskDesc} onChange={e => setTaskDesc(e.target.value)} className="input-field mt-1 w-full"></textarea>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Assign To</label>
+                <select required value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)} className="input-field mt-1 w-full">
+                  <option value="">Select Assignee...</option>
+                  {users.filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
+                    <option key={u.id} value={u.id}>{u.name} ({formatLabel(u.role)})</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Due Date (Optional)</label>
+                <input type="date" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} className="input-field mt-1 w-full" />
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button type="button" onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button type="submit" className="btn-primary">Create Task</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
