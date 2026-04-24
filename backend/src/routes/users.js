@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 router.get('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(users);
@@ -23,7 +23,7 @@ router.get('/staff', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), as
   try {
     const users = await prisma.user.findMany({
       where: { role: { in: ['CLASS_REP', 'ADMIN'] }, isActive: true },
-      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true },
       orderBy: { name: 'asc' }
     });
     res.json(users);
@@ -35,7 +35,7 @@ router.get('/staff', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), as
 // Create new user (Admin only)
 router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, studentId } = req.body;
     
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -50,6 +50,17 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
       return res.status(400).json({ error: 'Invalid role' });
     }
     
+    if (role === 'STUDENT' && !studentId) {
+      return res.status(400).json({ error: 'Student ID is required for students' });
+    }
+
+    if (studentId) {
+      const existingStudentId = await prisma.user.findUnique({ where: { studentId: studentId.trim() } });
+      if (existingStudentId) {
+        return res.status(409).json({ error: 'Student ID already exists' });
+      }
+    }
+    
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(409).json({ error: 'Email already exists' });
@@ -58,8 +69,8 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
     const passwordHash = await bcrypt.hash(password, 10);
     
     const user = await prisma.user.create({
-      data: { name: name.trim(), email: email.trim(), passwordHash, role },
-      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true }
+      data: { name: name.trim(), email: email.trim(), studentId: studentId ? studentId.trim() : null, passwordHash, role },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
     });
     
     res.status(201).json(user);
@@ -83,10 +94,24 @@ router.patch('/:id/role', authenticateToken, authorizeRoles('ADMIN'), async (req
       return res.status(400).json({ error: 'Cannot remove your own ADMIN role' });
     }
 
+    const targetUser = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (targetUser.role === 'ADMIN' && targetUser.isActive && role !== 'ADMIN') {
+      const activeAdminsCount = await prisma.user.count({
+        where: { role: 'ADMIN', isActive: true }
+      });
+      if (activeAdminsCount <= 1) {
+        return res.status(400).json({ error: 'You cannot downgrade the last active admin' });
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role },
-      select: { id: true, name: true, email: true, role: true, isActive: true, createdAt: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
     });
     res.json(user);
   } catch (error) {
@@ -122,10 +147,25 @@ router.patch('/:id/deactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
     if (req.params.id === req.user.id) {
       return res.status(400).json({ error: 'Cannot deactivate your own account' });
     }
+
+    const targetUser = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (targetUser.role === 'ADMIN' && targetUser.isActive) {
+      const activeAdminsCount = await prisma.user.count({
+        where: { role: 'ADMIN', isActive: true }
+      });
+      if (activeAdminsCount <= 1) {
+        return res.status(400).json({ error: 'You cannot deactivate the last active admin' });
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { isActive: false },
-      select: { id: true, name: true, email: true, role: true, isActive: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
     });
     res.json(user);
   } catch (error) {
@@ -139,7 +179,7 @@ router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { isActive: true },
-      select: { id: true, name: true, email: true, role: true, isActive: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
     });
     res.json(user);
   } catch (error) {

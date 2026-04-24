@@ -11,6 +11,7 @@ model User {
   id           String    @id @default(uuid())
   name         String
   email        String    @unique
+  studentId    String?   @unique
   passwordHash String
   role         String    // STUDENT, CLASS_REP, ADMIN
   isActive     Boolean   @default(true)

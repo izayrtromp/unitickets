@@ -11,11 +11,22 @@ const AdminUsers = () => {
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('STUDENT');
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+  
+  const [pendingRoles, setPendingRoles] = useState({});
+  
+  const [resettingPasswordUser, setResettingPasswordUser] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -41,12 +52,18 @@ const AdminUsers = () => {
       setCreateError('Password must be at least 6 characters.');
       return;
     }
+    
+    if (role === 'STUDENT' && !studentId.trim()) {
+      setCreateError('Student ID is required for students.');
+      return;
+    }
 
     try {
-      await api.post('/users', { name, email, password, role });
+      await api.post('/users', { name, email, studentId: studentId.trim() || null, password, role });
       setCreateSuccess('User created successfully!');
       setName('');
       setEmail('');
+      setStudentId('');
       setPassword('');
       setRole('STUDENT');
       fetchUsers();
@@ -72,27 +89,45 @@ const AdminUsers = () => {
       await api.patch(`/users/${userId}/role`, { role: newRole });
       fetchUsers();
       setActionSuccess('User role updated successfully');
+      
+      const p = {...pendingRoles};
+      delete p[userId];
+      setPendingRoles(p);
+      
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update role');
     }
   };
 
-  const handleResetPassword = async (userId) => {
-    const newPassword = window.prompt('Enter new password for this user (min 6 characters):');
-    if (!newPassword) return;
+  const submitPasswordReset = async () => {
+    setResetError('');
     if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters');
+      setResetError('Password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setResetError('Passwords do not match');
       return;
     }
     try {
-      await api.patch(`/users/${userId}/password`, { password: newPassword });
+      await api.patch(`/users/${resettingPasswordUser.id}/password`, { password: newPassword });
       setActionSuccess('Password reset successfully');
+      setResettingPasswordUser(null);
+      setNewPassword('');
+      setConfirmPassword('');
       setTimeout(() => setActionSuccess(''), 3000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to reset password');
+      setResetError(err.response?.data?.error || 'Failed to reset password');
     }
   };
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   if (loading) return <div className="p-8 text-center">Loading users...</div>;
 
@@ -109,7 +144,7 @@ const AdminUsers = () => {
           {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
           {createSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{createSuccess}</div>}
           
-          <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5 items-end">
+          <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
             <div>
               <label className="block text-sm font-medium text-gray-700">Name</label>
               <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="input-field mt-1 w-full" />
@@ -117,6 +152,10 @@ const AdminUsers = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700">Email</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field mt-1 w-full" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Student ID</label>
+              <input type="text" value={studentId} onChange={(e) => setStudentId(e.target.value)} className={`input-field mt-1 w-full ${role === 'STUDENT' && !studentId.trim() ? 'border-red-300 ring-1 ring-red-300' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Password</label>
@@ -138,6 +177,25 @@ const AdminUsers = () => {
       </div>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input-field w-full sm:max-w-xs"
+          />
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="input-field w-full sm:max-w-xs"
+          >
+            <option value="ALL">All Roles</option>
+            <option value="STUDENT">Student</option>
+            <option value="CLASS_REP">Class Rep</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
         {actionSuccess && <div className="m-4 text-sm text-green-600 bg-green-50 p-3 rounded">{actionSuccess}</div>}
         {error ? (
           <div className="p-4 text-red-500">{error}</div>
@@ -148,6 +206,7 @@ const AdminUsers = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
@@ -155,25 +214,34 @@ const AdminUsers = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {users.map((u) => (
+                {filteredUsers.map((u) => (
                   <tr key={u.id} className={!u.isActive ? "bg-gray-50 opacity-75" : ""}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.studentId || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {u.id === currentUser?.id ? (
                         <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
                           {formatLabel(u.role)}
                         </span>
                       ) : (
-                        <select
-                          value={u.role}
-                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                          className="text-xs rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6"
-                        >
-                          <option value="STUDENT">Student</option>
-                          <option value="CLASS_REP">Class Rep</option>
-                          <option value="ADMIN">Admin</option>
-                        </select>
+                        <div className="flex items-center space-x-2">
+                          <select
+                            value={pendingRoles[u.id] || u.role}
+                            onChange={(e) => setPendingRoles({ ...pendingRoles, [u.id]: e.target.value })}
+                            className="text-xs rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6"
+                          >
+                            <option value="STUDENT">Student</option>
+                            <option value="CLASS_REP">Class Rep</option>
+                            <option value="ADMIN">Admin</option>
+                          </select>
+                          {pendingRoles[u.id] && pendingRoles[u.id] !== u.role && (
+                            <div className="flex space-x-1">
+                              <button onClick={() => handleRoleChange(u.id, pendingRoles[u.id])} className="text-green-600 hover:text-green-800 text-xs font-bold px-1 border border-green-200 rounded bg-green-50">Save</button>
+                              <button onClick={() => { const p = {...pendingRoles}; delete p[u.id]; setPendingRoles(p); }} className="text-gray-500 hover:text-gray-700 text-xs px-1 border border-gray-200 rounded">Cancel</button>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -184,7 +252,7 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                       <button 
-                        onClick={() => handleResetPassword(u.id)}
+                        onClick={() => { setResettingPasswordUser(u); setNewPassword(''); setConfirmPassword(''); setResetError(''); }}
                         className="text-primary-600 hover:text-primary-900"
                       >
                         Reset Password
@@ -207,6 +275,30 @@ const AdminUsers = () => {
           </div>
         )}
       </div>
+
+      {/* Password Reset Modal */}
+      {resettingPasswordUser && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Reset Password for {resettingPasswordUser.name}</h3>
+            {resetError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{resetError}</div>}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} className="input-field mt-1 w-full" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="input-field mt-1 w-full" />
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button onClick={() => setResettingPasswordUser(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button onClick={submitPasswordReset} className="btn-primary">Save Password</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
