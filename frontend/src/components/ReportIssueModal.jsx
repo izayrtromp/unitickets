@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import api from '../api/axios';
 
@@ -9,6 +9,16 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isSubmitting && !success) {
+        onClose();
+      }
+    };
+    if (isOpen) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isSubmitting, success, onClose]);
 
   if (!isOpen) return null;
 
@@ -46,10 +56,20 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+    <div 
+      className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !isSubmitting && !success) onClose();
+      }}
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Report Issue / Feedback</h3>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Report Issue / Feedback</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Use this to report bugs, suggest improvements, or share feedback about UniTickets.
+            </p>
+          </div>
           <button onClick={onClose} disabled={isSubmitting || success} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>

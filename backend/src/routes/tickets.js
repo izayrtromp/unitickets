@@ -25,6 +25,16 @@ router.get('/', authenticateToken, async (req, res) => {
     if (category) where.category = category;
     if (priority) where.priority = priority;
     
+    if (req.query.type) {
+      if (req.query.type === 'Feedback') {
+        where.type = { in: ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'] };
+      } else if (req.query.type === 'Academic / Standard') {
+        where.type = { notIn: ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'] };
+      } else {
+        where.type = req.query.type;
+      }
+    }
+    
     if (search) {
       where.OR = [
         { title: { contains: search } },
@@ -179,12 +189,19 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
         }
       } else {
         if (req.user.id !== oldTicket.submitterId) {
+          const isFeedback = ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type);
           const readableStatus = status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+          
+          let message = `Your ticket '${ticket.title}' was moved to ${readableStatus}`;
+          if (isFeedback && status === 'RESOLVED') {
+            message = "Your feedback has been reviewed and addressed.";
+          }
+
           await createNotification({
             userId: oldTicket.submitterId, 
             ticketId: ticket.id, 
             type: 'STATUS',
-            message: `Your ticket '${ticket.title}' was moved to ${readableStatus}`,
+            message,
             activityId: activity.id
           });
         }

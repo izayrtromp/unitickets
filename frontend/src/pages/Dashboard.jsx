@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
+  const [filterType, setFilterType] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickFilter, setQuickFilter] = useState('all');
 
@@ -31,7 +32,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchTickets();
-  }, [filterStatus, filterCategory, filterPriority, searchQuery, quickFilter]);
+  }, [filterStatus, filterCategory, filterPriority, filterType, searchQuery, quickFilter]);
 
   const fetchStats = async () => {
     try {
@@ -49,6 +50,7 @@ const Dashboard = () => {
       if (filterStatus) params.append('status', filterStatus);
       if (filterCategory) params.append('category', filterCategory);
       if (filterPriority) params.append('priority', filterPriority);
+      if (filterType) params.append('type', filterType);
       if (searchQuery) params.append('search', searchQuery);
       if (quickFilter !== 'all') params.append('quickFilter', quickFilter);
 
@@ -84,11 +86,12 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* Stats row */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <StatCard title="Total Tickets" value={stats.totalTickets} />
           <StatCard title="New" value={stats.newTickets} />
           <StatCard title="In Progress" value={stats.inProgress} />
           <StatCard title="High Priority" value={stats.highPriority} highlight />
+          <StatCard title="Feedback" value={stats.feedbackCount || 0} />
         </div>
       )}
 
@@ -122,7 +125,7 @@ const Dashboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-md shadow flex flex-col md:flex-row gap-4">
+      <div className="bg-white p-4 rounded-md shadow flex flex-col md:flex-row flex-wrap gap-4">
         <input 
           type="text" 
           placeholder="Search tickets..." 
@@ -152,6 +155,13 @@ const Dashboard = () => {
           <option value="HIGH">High</option>
           <option value="URGENT">Urgent</option>
         </select>
+        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input-field w-full md:w-48">
+          <option value="">All Types</option>
+          <option value="Academic / Standard">Academic / Standard</option>
+          <option value="BUG">Bug</option>
+          <option value="FEATURE_REQUEST">Feature Request</option>
+          <option value="Feedback">Feedback</option>
+        </select>
       </div>
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
@@ -178,7 +188,14 @@ const Dashboard = () => {
               <li key={t.id}>
                 <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 transition p-4 sm:px-6">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
+                    <div className="flex items-center space-x-2 truncate">
+                      <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
+                      {['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap">
+                          {t.type === 'BUG' ? 'Bug' : t.type === 'FEATURE_REQUEST' ? 'Feature Request' : 'Feedback'}
+                        </span>
+                      )}
+                    </div>
                     <div className="ml-2 flex-shrink-0 flex">
                       <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100`}>
                         {formatLabel(t.status)}

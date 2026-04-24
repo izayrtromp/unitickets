@@ -18,13 +18,15 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const inProgress = await prisma.ticket.count({ where: { ...baseWhere, status: 'IN_PROGRESS' } });
     const resolved = await prisma.ticket.count({ where: { ...baseWhere, status: 'RESOLVED' } });
     const highPriority = await prisma.ticket.count({ where: { ...baseWhere, priority: { in: ['HIGH', 'URGENT'] } } });
+    const feedbackCount = await prisma.ticket.count({ where: { ...baseWhere, type: { in: ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'] } } });
 
     res.json({
       totalTickets,
       newTickets,
       inProgress,
       resolved,
-      highPriority
+      highPriority,
+      feedbackCount
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch stats' });
