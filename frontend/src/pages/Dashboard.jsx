@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { formatLabel, formatRelativeTime } from '../utils/format';
+import { getStatusColor, getFeedbackColor, getFeedbackTypeLabel, formatLabel, formatRelativeTime } from '../utils/format';
+import { Ticket as TicketIcon, PlusCircle, Clock, AlertTriangle, MessageSquare, Inbox } from 'lucide-react';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -33,6 +34,11 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTickets();
   }, [filterStatus, filterCategory, filterPriority, filterType, searchQuery, quickFilter]);
+
+  const hasFilters = filterStatus || filterCategory || filterPriority || filterType || searchQuery || quickFilter !== 'all';
+  const resetFilters = () => {
+    setFilterStatus(''); setFilterCategory(''); setFilterPriority(''); setFilterType(''); setSearchQuery(''); setQuickFilter('all');
+  };
 
   const fetchStats = async () => {
     try {
@@ -87,17 +93,25 @@ const Dashboard = () => {
       {/* Stats row */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
-          <StatCard title="Total Tickets" value={stats.totalTickets} />
-          <StatCard title="New" value={stats.newTickets} />
-          <StatCard title="In Progress" value={stats.inProgress} />
-          <StatCard title="High Priority" value={stats.highPriority} highlight />
-          <StatCard title="Feedback" value={stats.feedbackCount || 0} />
+          <StatCard title="Total Tickets" value={stats.totalTickets} icon={Inbox} />
+          <StatCard title="New" value={stats.newTickets} icon={PlusCircle} />
+          <StatCard title="In Progress" value={stats.inProgress} icon={Clock} />
+          <StatCard title="High Priority" value={stats.highPriority} highlight icon={AlertTriangle} />
+          <StatCard title="Feedback" value={stats.feedbackCount || 0} icon={MessageSquare} />
         </div>
       )}
 
       <div className="flex justify-between items-center mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-          <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
+            {hasFilters && (
+              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full flex items-center">
+                Filtered results
+                <button onClick={resetFilters} className="ml-2 text-primary-600 hover:text-primary-800 font-medium">Reset</button>
+              </span>
+            )}
+          </div>
           <div className="flex space-x-1 bg-gray-100 p-1 rounded-md self-start">
             <button 
               onClick={() => setQuickFilter('open')} 
@@ -125,15 +139,25 @@ const Dashboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-md shadow flex flex-col md:flex-row flex-wrap gap-4">
-        <input 
-          type="text" 
-          placeholder="Search tickets..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="input-field flex-grow"
-        />
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input-field w-full md:w-48">
+      <div className="bg-white p-4 rounded-md shadow flex flex-col md:flex-row flex-wrap gap-4 items-center">
+        <div className="relative flex-grow">
+          <input 
+            type="text" 
+            placeholder="Search by title or keyword..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field w-full pr-8 focus:ring-2 focus:ring-primary-500/30 transition-all duration-150"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
+        </div>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input-field w-full md:w-auto min-w-[140px] focus:ring-2 focus:ring-primary-500/30 transition-all duration-150">
           <option value="">All Statuses</option>
           <option value="NEW">New</option>
           <option value="IN_PROGRESS">In Progress</option>
@@ -141,21 +165,21 @@ const Dashboard = () => {
           <option value="RESOLVED">Resolved</option>
           <option value="CLOSED">Closed</option>
         </select>
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field w-full md:w-48">
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="input-field w-full md:w-auto min-w-[140px] focus:ring-2 focus:ring-primary-500/30 transition-all duration-150">
           <option value="">All Categories</option>
           <option value="General">General</option>
           <option value="Academic">Academic</option>
           <option value="Facility">Facility</option>
           <option value="Event">Event</option>
         </select>
-        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="input-field w-full md:w-48">
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className="input-field w-full md:w-auto min-w-[140px] focus:ring-2 focus:ring-primary-500/30 transition-all duration-150">
           <option value="">All Priorities</option>
           <option value="LOW">Low</option>
           <option value="MEDIUM">Medium</option>
           <option value="HIGH">High</option>
           <option value="URGENT">Urgent</option>
         </select>
-        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input-field w-full md:w-48">
+        <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="input-field w-full md:w-auto min-w-[140px] focus:ring-2 focus:ring-primary-500/30 transition-all duration-150">
           <option value="">All Types</option>
           <option value="Academic / Standard">Academic / Standard</option>
           <option value="BUG">Bug</option>
@@ -178,31 +202,35 @@ const Dashboard = () => {
               ))}
             </div>
           ) : tickets.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              {searchQuery || filterStatus || filterCategory || filterPriority || quickFilter !== 'all' 
-                ? "No results match your search." 
-                : "No tickets found."}
+            <div className="p-12 text-center flex flex-col items-center justify-center">
+              <Inbox className="h-12 w-12 text-gray-400 mb-3" />
+              <h3 className="text-lg font-medium text-gray-900">No tickets found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {hasFilters 
+                  ? "No tickets match your filters. Try adjusting filters." 
+                  : "No tickets yet. Create your first ticket to get started."}
+              </p>
             </div>
           ) : (
             tickets.map((t) => (
-              <li key={t.id}>
-                <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 transition p-4 sm:px-6">
+              <li key={t.id} className={`bg-white transition-all ${t.priority === 'HIGH' || t.priority === 'URGENT' ? 'border-l-2 border-red-400' : ''}`}>
+                <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 active:scale-[0.995] transition-all p-4 sm:px-6">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 truncate">
-                      <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
+                    <div className="flex items-center space-x-3 truncate">
                       {t.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap">
-                          {t.type === 'BUG' ? 'Bug' : t.type === 'FEATURE_REQUEST' ? 'Feature Request' : 'Feedback'}
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getFeedbackColor(t.type)}`}>
+                          {getFeedbackTypeLabel(t.type)}
                         </span>
                       )}
+                      <p className="text-base font-semibold text-gray-900 truncate">{t.title}</p>
                     </div>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <p className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100`}>
+                    <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                      <p className={`px-2 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(t.status)}`}>
                         {formatLabel(t.status)}
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
+                  <div className="mt-1 sm:flex sm:justify-between">
                     <div className="sm:flex text-sm text-gray-500">
                       <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
                     </div>
@@ -265,9 +293,12 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, highlight }) => (
-  <div className={`bg-white p-6 rounded-lg shadow-sm border ${highlight ? 'border-red-200' : 'border-gray-200'}`}>
-    <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+const StatCard = ({ title, value, highlight, icon: Icon }) => (
+  <div className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-150 border ${highlight ? 'border-red-200' : 'border-gray-200'}`}>
+    <div className="flex items-center justify-between">
+      <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+      {Icon && <Icon className={`h-5 w-5 ${highlight ? 'text-red-500' : 'text-gray-400'}`} />}
+    </div>
     <dd className={`mt-1 text-3xl font-semibold ${highlight ? 'text-red-600' : 'text-gray-900'}`}>{value}</dd>
   </div>
 );

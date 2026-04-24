@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
-import { formatRelativeTime, formatLabel } from '../utils/format';
+import { getStatusColor, getFeedbackColor, getFeedbackTypeLabel, formatRelativeTime, formatLabel } from '../utils/format';
 
 const TicketDetail = () => {
   const { id } = useParams();
@@ -37,6 +37,13 @@ const TicketDetail = () => {
   const [isAddingToAgenda, setIsAddingToAgenda] = useState(false);
   const [agendaSuccess, setAgendaSuccess] = useState('');
   const [agendaError, setAgendaError] = useState('');
+  const [toast, setToast] = useState('');
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(''), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     if (!taskSuccess) return;
@@ -129,6 +136,7 @@ const TicketDetail = () => {
       await api.put(`/tickets/${id}`, { status: newStatus });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
+      setToast(`Ticket marked as ${newStatus.replace('_', ' ')}`);
     } catch (err) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update ticket status');
     } finally {
@@ -294,7 +302,7 @@ const TicketDetail = () => {
                 </button>
               </>
             )}
-            <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
               {formatLabel(ticket.status)}
             </span>
           </div>
@@ -306,8 +314,8 @@ const TicketDetail = () => {
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
                 <span>{ticket.category} • <span className="font-semibold">{ticket.priority}</span></span>
                 {ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
-                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wider">
-                    {ticket.type === 'BUG' ? 'Bug' : ticket.type === 'FEATURE_REQUEST' ? 'Feature Request' : 'Feedback'}
+                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${getFeedbackColor(ticket.type)}`}>
+                    {getFeedbackTypeLabel(ticket.type)}
                   </span>
                 )}
               </dd>
@@ -503,6 +511,13 @@ const TicketDetail = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300 z-50">
+          {toast}
         </div>
       )}
     </div>

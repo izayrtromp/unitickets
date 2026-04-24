@@ -120,9 +120,9 @@ const Navbar = () => {
               <>
                 <button
                   onClick={() => setShowReportModal(true)}
-                  className="text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-md text-sm font-medium border border-gray-200 shadow-sm bg-white hover:bg-gray-50 flex items-center mr-2"
+                  className="text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-md text-sm font-medium border border-gray-300 shadow-sm bg-white hover:bg-gray-50 flex items-center gap-2 mr-2 transition-all duration-150"
                 >
-                  <AlertCircle className="w-4 h-4 mr-1.5" />
+                  <AlertCircle className="w-4 h-4" />
                   Report Issue
                 </button>
                 <div className="relative" ref={dropdownRef}>
