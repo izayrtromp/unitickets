@@ -190,7 +190,7 @@ const Dashboard = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2 truncate">
                       <p className="text-sm font-medium text-primary-600 truncate">{t.title}</p>
-                      {['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
+                      {t.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
                         <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 whitespace-nowrap">
                           {t.type === 'BUG' ? 'Bug' : t.type === 'FEATURE_REQUEST' ? 'Feature Request' : 'Feedback'}
                         </span>

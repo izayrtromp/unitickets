@@ -305,7 +305,7 @@ const TicketDetail = () => {
               <dt className="text-sm font-medium text-gray-500">Category & Priority</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
                 <span>{ticket.category} • <span className="font-semibold">{ticket.priority}</span></span>
-                {['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
+                {ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
                   <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 uppercase tracking-wider">
                     {ticket.type === 'BUG' ? 'Bug' : ticket.type === 'FEATURE_REQUEST' ? 'Feature Request' : 'Feedback'}
                   </span>

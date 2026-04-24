@@ -27,11 +27,16 @@ router.get('/', authenticateToken, async (req, res) => {
     
     if (req.query.type) {
       if (req.query.type === 'Feedback') {
-        where.type = { in: ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'] };
+        where.category = 'Feedback';
+        where.type = 'GENERAL_FEEDBACK';
       } else if (req.query.type === 'Academic / Standard') {
-        where.type = { notIn: ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'] };
-      } else {
-        where.type = req.query.type;
+        where.category = { not: 'Feedback' };
+      } else if (req.query.type === 'BUG') {
+        where.category = 'Feedback';
+        where.type = 'BUG';
+      } else if (req.query.type === 'FEATURE_REQUEST') {
+        where.category = 'Feedback';
+        where.type = 'FEATURE_REQUEST';
       }
     }
     
@@ -98,9 +103,9 @@ router.post('/', authenticateToken, authorizeRoles('STUDENT', 'CLASS_REP', 'ADMI
     const newTicket = await prisma.ticket.create({
       data: {
         title,
-        category: category || 'Feedback',
+        category: category || 'General',
         description,
-        type: type || 'GENERAL_FEEDBACK',
+        type: type || 'STANDARD',
         priority: priority || 'MEDIUM',
         status: 'NEW',
         submitterId: req.user.id
@@ -189,7 +194,7 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
         }
       } else {
         if (req.user.id !== oldTicket.submitterId) {
-          const isFeedback = ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type);
+          const isFeedback = ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type);
           const readableStatus = status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
           
           let message = `Your ticket '${ticket.title}' was moved to ${readableStatus}`;
