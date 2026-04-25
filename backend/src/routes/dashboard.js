@@ -17,7 +17,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
     const newTickets = await prisma.ticket.count({ where: { ...baseWhere, status: 'NEW' } });
     const inProgress = await prisma.ticket.count({ where: { ...baseWhere, status: 'IN_PROGRESS' } });
     const resolved = await prisma.ticket.count({ where: { ...baseWhere, status: 'RESOLVED' } });
-    const highPriority = await prisma.ticket.count({ where: { ...baseWhere, priority: { in: ['HIGH', 'URGENT'] } } });
+    const urgentPriority = await prisma.ticket.count({ where: { ...baseWhere, priority: 'URGENT' } });
     const feedbackCount = await prisma.ticket.count({ where: { ...baseWhere, category: 'Feedback' } });
 
     res.json({
@@ -25,7 +25,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
       newTickets,
       inProgress,
       resolved,
-      highPriority,
+      urgentPriority,
       feedbackCount
     });
   } catch (error) {

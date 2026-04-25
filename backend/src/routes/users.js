@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 router.get('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(users);
@@ -184,6 +184,34 @@ router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to reactivate user' });
+  }
+});
+
+// Approve user (Admin only)
+router.patch('/:id/approve', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { approvalStatus: 'APPROVED', isActive: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to approve user' });
+  }
+});
+
+// Reject user (Admin only)
+router.patch('/:id/reject', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.params.id },
+      data: { approvalStatus: 'REJECTED', isActive: false },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
+    });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reject user' });
   }
 });
 

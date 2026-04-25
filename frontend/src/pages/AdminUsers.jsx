@@ -37,6 +37,7 @@ const AdminUsers = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
+  const [viewTab, setViewTab] = useState('ALL');
   
   const [pendingRoles, setPendingRoles] = useState({});
   
@@ -107,6 +108,27 @@ const AdminUsers = () => {
     }
   };
 
+  const handleApprove = async (userId) => {
+    try {
+      await api.patch(`/users/${userId}/approve`);
+      fetchUsers();
+      setActionSuccess('User approved successfully');
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to approve user');
+    }
+  };
+
+  const handleReject = async (userId) => {
+    if (!window.confirm('Are you sure you want to reject this account request?')) return;
+    try {
+      await api.patch(`/users/${userId}/reject`);
+      fetchUsers();
+      setActionSuccess('User request rejected');
+    } catch (err) {
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to reject user');
+    }
+  };
+
   const handleRoleChange = async (userId, newRole) => {
     setIsSavingRoleId(userId);
     try {
@@ -152,7 +174,8 @@ const AdminUsers = () => {
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesTab = viewTab === 'PENDING' ? u.approvalStatus === 'PENDING' : u.approvalStatus !== 'PENDING';
+    return matchesSearch && matchesRole && matchesTab;
   });
 
 
@@ -205,6 +228,25 @@ const AdminUsers = () => {
       </div>
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div className="flex border-b border-gray-200">
+          <button 
+            onClick={() => setViewTab('ALL')} 
+            className={`py-3 px-6 text-sm font-medium ${viewTab === 'ALL' ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            All Users
+          </button>
+          <button 
+            onClick={() => setViewTab('PENDING')} 
+            className={`py-3 px-6 text-sm font-medium flex items-center ${viewTab === 'PENDING' ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            Pending Approvals
+            {users.filter(u => u.approvalStatus === 'PENDING').length > 0 && (
+              <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">
+                {users.filter(u => u.approvalStatus === 'PENDING').length}
+              </span>
+            )}
+          </button>
+        </div>
         <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <input
             type="text"
@@ -291,28 +333,41 @@ const AdminUsers = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {u.isActive ? 'Active' : 'Inactive'}
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        u.approvalStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        u.approvalStatus === 'REJECTED' ? 'bg-gray-100 text-gray-800' :
+                        u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {u.approvalStatus === 'PENDING' ? 'Pending' : u.approvalStatus === 'REJECTED' ? 'Rejected' : (u.isActive ? 'Active' : 'Inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                      <button 
-                        onClick={() => { setResettingPasswordUser(u); setNewPassword(''); setConfirmPassword(''); setResetError(''); }}
-                        className="text-primary-600 hover:text-primary-900"
-                      >
-                        Reset Password
-                      </button>
-                      {u.id !== currentUser?.id ? (
-                        <button 
-                          onClick={() => handleToggleActive(u.id, u.isActive)}
-                          disabled={isTogglingId === u.id}
-                          className={`${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} disabled:opacity-50`}
-                        >
-                          {isTogglingId === u.id ? (u.isActive ? 'Deactivating...' : 'Reactivating...') : (u.isActive ? 'Deactivate' : 'Reactivate')}
-                        </button>
+                      {u.approvalStatus === 'PENDING' ? (
+                        <>
+                          <button onClick={() => handleApprove(u.id)} className="text-green-600 hover:text-green-900">Approve</button>
+                          <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900">Reject</button>
+                        </>
                       ) : (
-                        <span className="text-gray-400 italic">Current Account</span>
+                        <>
+                          <button 
+                            onClick={() => { setResettingPasswordUser(u); setNewPassword(''); setConfirmPassword(''); setResetError(''); }}
+                            className="text-primary-600 hover:text-primary-900"
+                          >
+                            Reset Password
+                          </button>
+                          {u.id !== currentUser?.id ? (
+                            <button 
+                              onClick={() => handleToggleActive(u.id, u.isActive)}
+                              disabled={isTogglingId === u.id}
+                              className={`${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} disabled:opacity-50`}
+                            >
+                              {isTogglingId === u.id ? (u.isActive ? 'Deactivating...' : 'Reactivating...') : (u.isActive ? 'Deactivate' : 'Reactivate')}
+                            </button>
+                          ) : (
+                            <span className="text-gray-400 italic">Current Account</span>
+                          )}
+                        </>
                       )}
                     </td>
                   </tr>

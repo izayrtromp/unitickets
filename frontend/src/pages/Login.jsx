@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Ticket, GraduationCap, ClipboardList } from 'lucide-react';
 
@@ -111,9 +111,11 @@ const Login = () => {
             >
               {isLoggingIn ? 'Signing in...' : 'Sign in'}
             </button>
-            <p className="mt-4 text-center text-xs text-gray-400">
-              Sign in to continue
-            </p>
+            <div className="mt-4 text-center">
+              <Link to="/register" className="text-sm text-primary-600 hover:text-primary-800 font-medium">
+                Request an account
+              </Link>
+            </div>
           </div>
         </form>
       </div>

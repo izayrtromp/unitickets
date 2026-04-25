@@ -96,7 +96,7 @@ const Dashboard = () => {
           <StatCard title="Total Tickets" value={stats.totalTickets} icon={Inbox} />
           <StatCard title="New" value={stats.newTickets} icon={PlusCircle} />
           <StatCard title="In Progress" value={stats.inProgress} icon={Clock} />
-          <StatCard title="High Priority" value={stats.highPriority} highlight icon={AlertTriangle} />
+          <StatCard title="Urgent" value={stats.urgentPriority || 0} highlight icon={AlertTriangle} titleTooltip="Urgent tickets that require immediate attention" />
           <StatCard title="Feedback" value={stats.feedbackCount || 0} icon={MessageSquare} />
         </div>
       )}
@@ -107,7 +107,7 @@ const Dashboard = () => {
             <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
             {hasFilters && (
               <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full flex items-center">
-                Filtered results
+                {filterPriority === 'URGENT' ? 'Urgent priority selected' : 'Filtered results'}
                 <button onClick={resetFilters} className="ml-2 text-primary-600 hover:text-primary-800 font-medium">Reset</button>
               </span>
             )}
@@ -213,29 +213,42 @@ const Dashboard = () => {
             </div>
           ) : (
             tickets.map((t) => (
-              <li key={t.id} className={`bg-white transition-all ${t.priority === 'HIGH' || t.priority === 'URGENT' ? 'border-l-2 border-red-400' : ''}`}>
-                <Link to={`/tickets/${t.id}`} className="block hover:bg-gray-50 active:scale-[0.995] transition-all p-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 truncate">
-                      {t.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getFeedbackColor(t.type)}`}>
-                          {getFeedbackTypeLabel(t.type)}
-                        </span>
-                      )}
-                      <p className="text-base font-semibold text-gray-900 truncate">{t.title}</p>
+              <li key={t.id} className={`bg-white transition-all ${
+                t.priority === 'URGENT' ? 'border-l-2 border-red-500' : 
+                t.priority === 'HIGH' ? 'border-l-2 border-red-300' : ''
+              }`}>
+                <Link to={`/tickets/${t.id}`} className={`block active:scale-[0.995] transition-all p-4 sm:px-6 ${
+                  t.priority === 'URGENT' ? 'hover:bg-red-50/40' : 'hover:bg-gray-50'
+                }`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col space-y-1 truncate pr-4">
+                      <div className="flex items-center space-x-3 truncate">
+                        {t.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getFeedbackColor(t.type)}`}>
+                            {getFeedbackTypeLabel(t.type)}
+                          </span>
+                        )}
+                        <p className="text-base font-semibold text-gray-900 truncate">{t.title}</p>
+                      </div>
+                      <div className="text-sm text-gray-500 truncate">
+                        <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
+                      </div>
                     </div>
-                    <div className="ml-2 flex-shrink-0 flex items-center space-x-2">
+                    <div className="flex-shrink-0 flex flex-col items-end space-y-2">
                       <p className={`px-2 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(t.status)}`}>
                         {formatLabel(t.status)}
                       </p>
-                    </div>
-                  </div>
-                  <div className="mt-1 sm:flex sm:justify-between">
-                    <div className="sm:flex text-sm text-gray-500">
-                      <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <p>Priority: {formatLabel(t.priority)}</p>
+                      <div className="flex items-center text-sm">
+                        <span className={`flex items-center ${
+                          t.priority === 'URGENT' ? 'text-red-600 font-medium' : 
+                          t.priority === 'HIGH' ? 'text-red-500 font-normal' : 
+                          t.priority === 'MEDIUM' ? 'text-gray-600 font-normal' : 
+                          'text-gray-400 font-normal'
+                        }`}>
+                          {t.priority === 'URGENT' && <AlertTriangle className="w-3.5 h-3.5 mr-1 inline" />}
+                          {formatLabel(t.priority)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>
@@ -293,10 +306,10 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, highlight, icon: Icon }) => (
+const StatCard = ({ title, value, highlight, icon: Icon, titleTooltip }) => (
   <div className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-150 border ${highlight ? 'border-red-200' : 'border-gray-200'}`}>
-    <div className="flex items-center justify-between">
-      <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+    <div className="flex items-center justify-between" title={titleTooltip}>
+      <dt className="text-sm font-medium text-gray-500 truncate cursor-default">{title}</dt>
       {Icon && <Icon className={`h-5 w-5 ${highlight ? 'text-red-500' : 'text-gray-400'}`} />}
     </div>
     <dd className={`mt-1 text-3xl font-semibold ${highlight ? 'text-red-600' : 'text-gray-900'}`}>{value}</dd>
