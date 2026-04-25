@@ -111,9 +111,12 @@ const Login = () => {
             >
               {isLoggingIn ? 'Signing in...' : 'Sign in'}
             </button>
-            <div className="mt-4 text-center">
+            <div className="mt-4 text-center flex flex-col space-y-3">
               <Link to="/register" className="text-sm text-primary-600 hover:text-primary-800 font-medium">
                 Request an account
+              </Link>
+              <Link to="/resend-verification" className="text-xs text-gray-500 hover:text-gray-700 font-medium">
+                Resend verification email
               </Link>
             </div>
           </div>

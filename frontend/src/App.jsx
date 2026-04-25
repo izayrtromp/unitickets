@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResendVerification from './pages/ResendVerification';
 import VerifyEmail from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import TicketDetail from './pages/TicketDetail';
@@ -38,6 +39,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>

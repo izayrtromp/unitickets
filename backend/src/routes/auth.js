@@ -7,6 +7,8 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+const resendCooldowns = new Map(); // in-memory cache for rate-limiting
+
 router.post('/register-request', async (req, res) => {
   try {
     const { name, studentId, email, password, confirmPassword } = req.body;
@@ -142,6 +144,55 @@ router.post('/verify-email', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to verify email' });
+  }
+});
+
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    if (!email.endsWith('@student.ua.aw')) {
+      return res.status(400).json({ error: 'Only University of Aruba student emails are allowed.' });
+    }
+
+    const genericSuccess = 'If an unverified account exists, a new verification email has been sent.';
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ message: genericSuccess });
+    }
+
+    if (user.isEmailVerified) {
+      return res.status(400).json({ error: 'This account is already verified.' });
+    }
+
+    const now = Date.now();
+    const lastSent = resendCooldowns.get(email);
+    if (lastSent && (now - lastSent) < 2 * 60 * 1000) {
+      return res.status(429).json({ error: 'Please wait before requesting another verification email.' });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { verificationToken }
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
+
+    const emailSent = await sendVerificationEmail(email, verificationUrl);
+    if (emailSent) {
+      resendCooldowns.set(email, now);
+    }
+
+    res.json({ message: genericSuccess });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
