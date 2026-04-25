@@ -19,7 +19,7 @@ const sendVerificationEmail = async (toEmail, verificationUrl) => {
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <h2 style="color: #059669;">Welcome to UniTickets</h2>
-          <p>Please verify your university email by clicking the link below.</p>
+          <p>Please verify your University of Aruba email by clicking the link below.</p>
           <p style="margin: 30px 0;">
             <a href="${verificationUrl}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
               Verify Email

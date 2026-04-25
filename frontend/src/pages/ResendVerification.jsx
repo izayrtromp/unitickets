@@ -20,7 +20,7 @@ const ResendVerification = () => {
     setSuccess('');
     
     if (!email.endsWith('@ua.aw')) {
-      return setError('Please use a valid University of Aruba email address ending in @ua.aw.');
+      return setError('Please use your University of Aruba email address (@ua.aw).');
     }
 
     setIsSubmitting(true);
@@ -47,7 +47,7 @@ const ResendVerification = () => {
             Resend Verification
           </h2>
           <p className="mt-3 text-center text-sm text-gray-500 leading-relaxed">
-            Enter your university email to receive a new verification link.
+            Enter your University of Aruba email to receive a new verification link.
           </p>
         </div>
 
@@ -64,7 +64,7 @@ const ResendVerification = () => {
           )}
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">University Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">University of Aruba Email</label>
             <input
               type="email"
               required
@@ -74,6 +74,7 @@ const ResendVerification = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@ua.aw"
             />
+            <p className="mt-1 text-xs text-gray-500">Use your official University of Aruba email address (@ua.aw)</p>
           </div>
 
           <div className="pt-2">

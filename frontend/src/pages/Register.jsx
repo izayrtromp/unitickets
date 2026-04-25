@@ -31,7 +31,7 @@ const Register = () => {
     }
 
     if (!email.endsWith('@ua.aw')) {
-      return setError('Please use a valid University of Aruba email address ending in @ua.aw.');
+      return setError('Please use your University of Aruba email address (@ua.aw).');
     }
 
     setIsSubmitting(true);
@@ -116,7 +116,7 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">University Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">University of Aruba Email</label>
             <input
               type="email"
               required
@@ -126,6 +126,7 @@ const Register = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@ua.aw"
             />
+            <p className="mt-1 text-xs text-gray-500">Use your official University of Aruba email address (@ua.aw)</p>
           </div>
 
           <div>

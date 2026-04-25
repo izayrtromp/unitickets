@@ -26,7 +26,7 @@ router.post('/register-request', async (req, res) => {
     }
 
     if (!email.endsWith('@ua.aw')) {
-      return res.status(400).json({ error: 'Please use a valid University of Aruba email address ending in @ua.aw.' });
+      return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -71,7 +71,7 @@ router.post('/register-request', async (req, res) => {
     }
 
     const responsePayload = {
-      message: 'Account request submitted. Please check your university email to verify your account.'
+      message: 'Account request submitted. Please check your University of Aruba email to verify your account.'
     };
 
     if (process.env.NODE_ENV !== 'production') {
@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
     }
 
     if (!user.isEmailVerified) {
-      return res.status(403).json({ error: 'Please verify your university email before logging in.' });
+      return res.status(403).json({ error: 'Please verify your University of Aruba email before logging in.' });
     }
 
     if (user.approvalStatus === 'PENDING') {
@@ -155,7 +155,7 @@ router.post('/resend-verification', async (req, res) => {
     }
 
     if (!email.endsWith('@ua.aw')) {
-      return res.status(400).json({ error: 'Please use a valid University of Aruba email address ending in @ua.aw.' });
+      return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
     }
 
     const genericSuccess = 'If an unverified account exists, a new verification email has been sent.';
