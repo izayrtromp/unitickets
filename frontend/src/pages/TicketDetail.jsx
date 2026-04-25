@@ -4,10 +4,12 @@ import api from '../api/axios';
 import { ArrowLeft } from 'lucide-react';
 import { getStatusColor, getPriorityColor, getFeedbackColor, getFeedbackTypeLabel, formatRelativeTime, formatLabel } from '../utils/format';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const TicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { addToast } = useToast();
   
