@@ -19,8 +19,8 @@ const ResendVerification = () => {
     setError('');
     setSuccess('');
     
-    if (!email.endsWith('@student.ua.aw')) {
-      return setError('Only University of Aruba student emails are allowed.');
+    if (!email.endsWith('@ua.aw')) {
+      return setError('Please use a valid University of Aruba email address ending in @ua.aw.');
     }
 
     setIsSubmitting(true);
@@ -72,7 +72,7 @@ const ResendVerification = () => {
               className="input-field w-full disabled:opacity-50 rounded-lg focus:ring-2 focus:ring-primary-500 transition-shadow"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@student.ua.aw"
+              placeholder="your.email@ua.aw"
             />
           </div>
 

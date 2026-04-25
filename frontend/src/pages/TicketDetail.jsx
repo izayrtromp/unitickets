@@ -186,7 +186,7 @@ const TicketDetail = () => {
   
   const openTaskModal = () => {
     setTaskTitle(ticket.title);
-    setTaskDesc(`Follow-up action for ticket #${ticket.id}`);
+    setTaskDesc(`Follow-up task for: "${ticket.title}"`);
     setTaskAssignee(ticket.assignedTo?.id || user.id);
     setTaskDueDate('');
     setTaskError('');

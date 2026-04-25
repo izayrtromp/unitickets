@@ -86,7 +86,7 @@ const Login = () => {
               className="input-field w-full disabled:opacity-50 rounded-lg transition-shadow focus:ring-2 focus:ring-primary-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@university.edu"
+              placeholder="your.email@ua.aw"
             />
           </div>
 

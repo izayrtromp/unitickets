@@ -25,8 +25,8 @@ router.post('/register-request', async (req, res) => {
       return res.status(400).json({ error: 'Passwords do not match' });
     }
 
-    if (!email.endsWith('@student.ua.aw')) {
-      return res.status(400).json({ error: 'Only University of Aruba student emails are allowed.' });
+    if (!email.endsWith('@ua.aw')) {
+      return res.status(400).json({ error: 'Please use a valid University of Aruba email address ending in @ua.aw.' });
     }
 
     const existingUser = await prisma.user.findFirst({
@@ -154,8 +154,8 @@ router.post('/resend-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email is required.' });
     }
 
-    if (!email.endsWith('@student.ua.aw')) {
-      return res.status(400).json({ error: 'Only University of Aruba student emails are allowed.' });
+    if (!email.endsWith('@ua.aw')) {
+      return res.status(400).json({ error: 'Please use a valid University of Aruba email address ending in @ua.aw.' });
     }
 
     const genericSuccess = 'If an unverified account exists, a new verification email has been sent.';
