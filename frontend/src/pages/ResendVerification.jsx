@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { Mail } from 'lucide-react';
+import { isValidUAEmail } from '../utils/validation';
 
 const ResendVerification = () => {
   const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ const ResendVerification = () => {
     setError('');
     setSuccess('');
     
-    if (!email.endsWith('@ua.aw')) {
+    if (!isValidUAEmail(email)) {
       return setError('Please use your University of Aruba email address (@ua.aw).');
     }
 

@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../utils/email');
+const { isValidUAEmail } = require('../utils/validation');
 const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -25,7 +26,7 @@ router.post('/register-request', async (req, res) => {
       return res.status(400).json({ error: 'Passwords do not match' });
     }
 
-    if (!email.endsWith('@ua.aw')) {
+    if (!isValidUAEmail(email)) {
       return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
     }
 
@@ -154,7 +155,7 @@ router.post('/resend-verification', async (req, res) => {
       return res.status(400).json({ error: 'Email is required.' });
     }
 
-    if (!email.endsWith('@ua.aw')) {
+    if (!isValidUAEmail(email)) {
       return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
     }
 

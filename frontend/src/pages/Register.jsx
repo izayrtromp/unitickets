@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { Ticket } from 'lucide-react';
+import { isValidUAEmail } from '../utils/validation';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -30,7 +31,7 @@ const Register = () => {
       return setError('Passwords do not match');
     }
 
-    if (!email.endsWith('@ua.aw')) {
+    if (!isValidUAEmail(email)) {
       return setError('Please use your University of Aruba email address (@ua.aw).');
     }
 
