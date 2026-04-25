@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from '../components/ConfirmModal';
+import { getStatusColor } from '../utils/format';
+import { ClipboardList } from 'lucide-react';
 
 const formatStatus = (status) => {
   if (status === 'TODO') return 'To Do';
@@ -12,22 +16,18 @@ const formatStatus = (status) => {
 
 const Tasks = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const [isUpdatingStatusId, setIsUpdatingStatusId] = useState(null);
   const [isDeletingTaskId, setIsDeletingTaskId] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   // Default filter: "Assigned to me"
   const [filter, setFilter] = useState('ASSIGNED_TO_ME'); // ALL, ASSIGNED_TO_ME, TODO, IN_PROGRESS, DONE
-
-  useEffect(() => {
-    if (!success) return;
-    const t = setTimeout(() => setSuccess(''), 3000);
-    return () => clearTimeout(t);
-  }, [success]);
 
   useEffect(() => {
     fetchTasks();
@@ -49,27 +49,34 @@ const Tasks = () => {
     setError('');
     try {
       await api.patch(`/tasks/${taskId}`, { status: newStatus });
-      setSuccess('Task status updated');
+      addToast('Task status updated', 'success');
       fetchTasks();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update task status');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update task status', 'error');
     } finally {
       setIsUpdatingStatusId(null);
     }
   };
 
-  const handleDeleteTask = async (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-    setIsDeletingTaskId(taskId);
+  const confirmDelete = (taskId) => {
+    setTaskToDelete(taskId);
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!taskToDelete) return;
+    setIsDeletingTaskId(taskToDelete);
     setError('');
     try {
-      await api.delete(`/tasks/${taskId}`);
-      setSuccess('Task deleted successfully');
+      await api.delete(`/tasks/${taskToDelete}`);
+      addToast('Task deleted successfully', 'success');
+      setDeleteModalOpen(false);
       fetchTasks();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to delete task');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to delete task', 'error');
     } finally {
       setIsDeletingTaskId(null);
+      setTaskToDelete(null);
     }
   };
 
@@ -112,7 +119,6 @@ const Tasks = () => {
       </div>
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
-      {success && <div className="text-green-600 bg-green-50 p-4 rounded-md">{success}</div>}
 
       <div className="bg-white shadow overflow-hidden sm:rounded-lg">
         {loading ? (
@@ -127,8 +133,12 @@ const Tasks = () => {
             ))}
           </div>
         ) : filteredTasks.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            {filter === 'ALL' ? 'No tasks found.' : 'No tasks match your current filter.'}
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <ClipboardList className="h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {filter === 'ALL' ? 'No tasks assigned yet.' : 'No tasks match your current filter.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -145,7 +155,7 @@ const Tasks = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredTasks.map(task => (
-                  <tr key={task.id} className={`${task.status === 'DONE' ? 'opacity-75 bg-gray-50' : ''}`}>
+                  <tr key={task.id} className={`${task.status === 'DONE' ? 'opacity-75 bg-gray-50' : ''} hover:bg-gray-50 transition-all duration-200`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {isOverdue(task) && <span className="h-2 w-2 rounded-full bg-red-500 mr-2" title="Overdue"></span>}
@@ -158,22 +168,20 @@ const Tasks = () => {
                         <Link to={`/tickets/${task.ticket.id}`} className="text-primary-600 hover:text-primary-900 hover:underline">
                           {task.ticket.title}
                         </Link>
-                      ) : '-'}
+                      ) : <span className="italic text-gray-400">No ticket linked</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {task.assignedTo?.name || '-'}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm ${isOverdue(task) ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span className="italic text-gray-400">No due date</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select 
                         value={task.status}
                         onChange={(e) => handleStatusChange(task.id, e.target.value)}
                         disabled={isUpdatingStatusId === task.id}
-                        className={`text-xs rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50
-                          ${task.status === 'DONE' ? 'bg-green-50 text-green-800 border-green-200' : 
-                            task.status === 'IN_PROGRESS' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : ''}`}
+                        className={`text-xs rounded shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50 transition-all duration-200 cursor-pointer ${getStatusColor(task.status)}`}
                       >
                         {isUpdatingStatusId === task.id ? (
                           <option value={task.status}>Updating...</option>
@@ -189,9 +197,9 @@ const Tasks = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {user.role === 'ADMIN' && (
                         <button 
-                          onClick={() => handleDeleteTask(task.id)} 
+                          onClick={() => confirmDelete(task.id)} 
                           disabled={isDeletingTaskId === task.id}
-                          className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                          className="text-red-600 hover:text-red-900 disabled:opacity-50 font-semibold"
                         >
                           {isDeletingTaskId === task.id ? 'Deleting...' : 'Delete'}
                         </button>
@@ -204,6 +212,17 @@ const Tasks = () => {
           </div>
         )}
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)} 
+        onConfirm={executeDelete} 
+        title="Delete Task" 
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        confirmText="Delete"
+        confirmColor="red"
+        isProcessing={!!isDeletingTaskId}
+      />
     </div>
   );
 };

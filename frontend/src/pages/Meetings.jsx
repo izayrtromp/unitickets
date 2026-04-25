@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, Clock, Plus, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Plus, Trash2, CalendarX2 } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../context/ToastContext';
 
 const Meetings = () => {
   const { user } = useAuth();
+  const { addToast } = useToast();
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const [filter, setFilter] = useState('upcoming'); // upcoming, past, all
 
@@ -22,12 +24,8 @@ const Meetings = () => {
   const [isCreating, setIsCreating] = useState(false);
   
   const [deletingId, setDeletingId] = useState(null);
-
-  useEffect(() => {
-    if (!success) return;
-    const timer = setTimeout(() => setSuccess(''), 3000);
-    return () => clearTimeout(timer);
-  }, [success]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [meetingToDelete, setMeetingToDelete] = useState(null);
 
   useEffect(() => {
     fetchMeetings();
@@ -59,7 +57,7 @@ const Meetings = () => {
         location: newLocation,
         notes: newNotes
       });
-      setSuccess('Meeting created successfully');
+      addToast('Meeting created successfully', 'success');
       setShowCreateModal(false);
       
       // Reset form
@@ -71,25 +69,31 @@ const Meetings = () => {
       
       fetchMeetings();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to create meeting');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to create meeting', 'error');
     } finally {
       setIsCreating(false);
     }
   };
 
-  const handleDeleteMeeting = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this meeting? This will remove all associated agenda items.')) return;
-    
-    setDeletingId(id);
+  const confirmDelete = (id) => {
+    setMeetingToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!meetingToDelete) return;
+    setDeletingId(meetingToDelete);
     setError('');
     try {
-      await api.delete(`/meetings/${id}`);
-      setSuccess('Meeting deleted successfully');
+      await api.delete(`/meetings/${meetingToDelete}`);
+      addToast('Meeting deleted successfully', 'success');
+      setDeleteModalOpen(false);
       fetchMeetings();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to delete meeting');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to delete meeting', 'error');
     } finally {
       setDeletingId(null);
+      setMeetingToDelete(null);
     }
   };
 
@@ -136,7 +140,6 @@ const Meetings = () => {
       </div>
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
-      {success && <div className="text-green-600 bg-green-50 p-4 rounded-md">{success}</div>}
 
       <div className="bg-white shadow sm:rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex gap-2">
@@ -167,13 +170,17 @@ const Meetings = () => {
             ))}
           </div>
         ) : filteredMeetings.length === 0 ? (
-          <div className="p-8 text-center text-gray-500">
-            No {filter !== 'all' ? filter : ''} meetings found.
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <CalendarX2 className="h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900">No meetings scheduled</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {filter === 'all' ? 'Schedule a new meeting to get started.' : `No ${filter} meetings match your current filter.`}
+            </p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
             {filteredMeetings.map(meeting => (
-              <li key={meeting.id} className="hover:bg-gray-50 transition">
+              <li key={meeting.id} className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
                 <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <Link to={`/meetings/${meeting.id}`} className="block focus:outline-none">
@@ -214,7 +221,7 @@ const Meetings = () => {
                     </Link>
                     {user?.role === 'ADMIN' && (
                       <button
-                        onClick={() => handleDeleteMeeting(meeting.id)}
+                        onClick={() => confirmDelete(meeting.id)}
                         disabled={deletingId === meeting.id}
                         className="text-red-500 hover:text-red-700 disabled:opacity-50 p-2 rounded hover:bg-red-50"
                         title="Delete Meeting"
@@ -229,6 +236,17 @@ const Meetings = () => {
           </ul>
         )}
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)} 
+        onConfirm={executeDelete} 
+        title="Delete Meeting" 
+        message="Are you sure you want to delete this meeting? This will remove all associated agenda items. This action cannot be undone." 
+        confirmText="Delete"
+        confirmColor="red"
+        isProcessing={!!deletingId}
+      />
 
       {showCreateModal && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
@@ -310,8 +328,14 @@ const Meetings = () => {
                 <button
                   type="submit"
                   disabled={isCreating}
-                  className="btn-primary disabled:opacity-50"
+                  className="btn-primary disabled:opacity-50 transition-all duration-200 flex items-center"
                 >
+                  {isCreating && (
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   {isCreating ? 'Scheduling...' : 'Schedule Meeting'}
                 </button>
               </div>

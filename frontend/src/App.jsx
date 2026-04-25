@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -36,8 +37,9 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <ToastProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
@@ -50,7 +52,8 @@ function App() {
           <Route path="meetings/:id" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><MeetingDetail /></PrivateRoute>} />
           <Route path="admin/users" element={<PrivateRoute roles={['ADMIN']}><AdminUsers /></PrivateRoute>} />
         </Route>
-      </Routes>
+        </Routes>
+      </ToastProvider>
     </Router>
   );
 }

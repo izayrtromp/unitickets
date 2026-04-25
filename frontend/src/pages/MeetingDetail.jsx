@@ -3,16 +3,19 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, MapPin, Clock, Edit2, ExternalLink, Plus } from 'lucide-react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
+import ConfirmModal from '../components/ConfirmModal';
+import { getStatusColor, getPriorityColor } from '../utils/format';
+import { useToast } from '../context/ToastContext';
 
 const MeetingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToast } = useToast();
   
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
   
   const [staff, setStaff] = useState([]);
   
@@ -40,11 +43,8 @@ const MeetingDetail = () => {
   const [taskDueDate, setTaskDueDate] = useState('');
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
-  useEffect(() => {
-    if (!success) return;
-    const timer = setTimeout(() => setSuccess(''), 3000);
-    return () => clearTimeout(timer);
-  }, [success]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
 
   useEffect(() => {
     fetchMeeting();
@@ -103,11 +103,11 @@ const MeetingDetail = () => {
       }
 
       await api.patch(`/meetings/${id}`, payload);
-      setSuccess('Meeting updated successfully');
+      addToast('Meeting updated successfully', 'success');
       setIsEditingMeeting(false);
       fetchMeeting();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update meeting');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update meeting', 'error');
     } finally {
       setIsSavingMeeting(false);
     }
@@ -129,25 +129,33 @@ const MeetingDetail = () => {
         outcome: editItemOutcome,
         status: editItemStatus
       });
-      setSuccess('Agenda item updated');
+      addToast('Agenda item updated', 'success');
       setEditingItemId(null);
       fetchMeeting();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update agenda item');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update agenda item', 'error');
     } finally {
       setIsSavingItem(false);
     }
   };
 
-  const handleRemoveAgendaItem = async (itemId) => {
-    if (!window.confirm('Are you sure you want to remove this ticket from the agenda?')) return;
+  const confirmRemove = (itemId) => {
+    setItemToRemove(itemId);
+    setDeleteModalOpen(true);
+  };
+
+  const executeRemove = async () => {
+    if (!itemToRemove) return;
     setError('');
     try {
-      await api.delete(`/meetings/${id}/agenda/${itemId}`);
-      setSuccess('Ticket removed from agenda');
+      await api.delete(`/meetings/${id}/agenda/${itemToRemove}`);
+      addToast('Ticket removed from agenda', 'success');
+      setDeleteModalOpen(false);
       fetchMeeting();
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to remove agenda item');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to remove agenda item', 'error');
+    } finally {
+      setItemToRemove(null);
     }
   };
 
@@ -175,10 +183,10 @@ const MeetingDetail = () => {
         ticketId: agendaItem.ticketId
       });
       
-      setSuccess('Follow-up task created successfully');
+      addToast('Follow-up task created successfully', 'success');
       setTaskModalItemId(null);
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to create task');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to create task', 'error');
     } finally {
       setIsCreatingTask(false);
     }
@@ -223,13 +231,12 @@ const MeetingDetail = () => {
     <div className="max-w-5xl mx-auto space-y-6">
       <button 
         onClick={() => navigate('/meetings')}
-        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+        className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" /> Back to Meetings
       </button>
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
-      {success && <div className="text-green-600 bg-green-50 p-4 rounded-md">{success}</div>}
 
       <div className="bg-white shadow sm:rounded-lg">
         {isEditingMeeting ? (
@@ -319,22 +326,17 @@ const MeetingDetail = () => {
                         <ExternalLink className="h-4 w-4 ml-1" />
                       </Link>
                     </div>
-                    <div className="mt-1 text-xs text-gray-500 space-x-3">
-                      <span>Submitted by: {item.ticket.submitter.name}</span>
+                    <div className="mt-2 flex items-center text-xs text-gray-500 space-x-3">
+                      <span>By: {item.ticket.submitter.name}</span>
                       <span>•</span>
-                      <span>Priority: <span className="font-semibold">{item.ticket.priority}</span></span>
+                      <span className={`px-2 py-0.5 rounded-full font-medium ${getPriorityColor(item.ticket.priority)}`}>{item.ticket.priority}</span>
                       <span>•</span>
-                      <span>Ticket Status: <span className="font-semibold">{formatTicketStatus(item.ticket.status)}</span></span>
+                      <span className={`px-2 py-0.5 rounded-full font-medium ${getStatusColor(item.ticket.status)}`}>{formatTicketStatus(item.ticket.status)}</span>
                     </div>
                   </div>
                   
                   {editingItemId !== item.id && (
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                      item.status === 'RESOLVED' ? 'bg-green-100 text-green-800' :
-                      item.status === 'FOLLOW_UP_REQUIRED' ? 'bg-orange-100 text-orange-800' :
-                      item.status === 'DISCUSSED' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-600'
-                    }`}>
+                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
                       {formatTicketStatus(item.status)}
                     </span>
                   )}
@@ -383,7 +385,7 @@ const MeetingDetail = () => {
                     <div className="flex justify-between items-center pt-2">
                       <button 
                         type="button" 
-                        onClick={() => handleRemoveAgendaItem(item.id)} 
+                        onClick={() => confirmRemove(item.id)} 
                         disabled={isSavingItem}
                         className="text-red-600 hover:text-red-800 text-xs font-medium"
                       >
@@ -417,16 +419,15 @@ const MeetingDetail = () => {
                     <div className="flex space-x-3 pt-2">
                       <button 
                         onClick={() => startEditItem(item)} 
-                        className="text-sm text-primary-600 hover:text-primary-800 font-medium"
+                        className="btn-secondary py-1.5 px-3 text-sm font-medium"
                       >
                         Edit Notes & Outcome
                       </button>
-                      <span className="text-gray-300">|</span>
                       <button 
                         onClick={() => openTaskModal(item)}
-                        className="text-sm text-gray-600 hover:text-gray-800 font-medium flex items-center"
+                        className="btn-secondary py-1.5 px-3 text-sm font-medium flex items-center"
                       >
-                        <Plus className="h-3 w-3 mr-1" /> Create Follow-up Task
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Create Follow-up Task
                       </button>
                     </div>
                   </div>
@@ -436,6 +437,16 @@ const MeetingDetail = () => {
           </ul>
         )}
       </div>
+
+      <ConfirmModal 
+        isOpen={deleteModalOpen} 
+        onClose={() => setDeleteModalOpen(false)} 
+        onConfirm={executeRemove} 
+        title="Remove from Agenda" 
+        message="Are you sure you want to remove this ticket from the agenda?"
+        confirmText="Remove"
+        confirmColor="red"
+      />
 
       {/* Create Task Modal */}
       {taskModalItemId && (

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { formatLabel, formatRelativeTime } from '../utils/format';
+import { useToast } from '../context/ToastContext';
 
 const AdminUsers = () => {
   const { user: currentUser } = useAuth();
+  const { addToast } = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -15,25 +17,7 @@ const AdminUsers = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('STUDENT');
   const [createError, setCreateError] = useState('');
-  const [createSuccess, setCreateSuccess] = useState('');
-  const [actionSuccess, setActionSuccess] = useState('');
-  
-  const [isCreating, setIsCreating] = useState(false);
-  const [isTogglingId, setIsTogglingId] = useState(null);
-  const [isSavingRoleId, setIsSavingRoleId] = useState(null);
   const [isResettingPwd, setIsResettingPwd] = useState(false);
-
-  useEffect(() => {
-    if (!actionSuccess) return;
-    const t = setTimeout(() => setActionSuccess(''), 3000);
-    return () => clearTimeout(t);
-  }, [actionSuccess]);
-
-  useEffect(() => {
-    if (!createSuccess) return;
-    const t = setTimeout(() => setCreateSuccess(''), 3000);
-    return () => clearTimeout(t);
-  }, [createSuccess]);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -79,7 +63,7 @@ const AdminUsers = () => {
     try {
       setIsCreating(true);
       await api.post('/users', { name, email, studentId: studentId.trim() || null, password, role });
-      setCreateSuccess('User created successfully!');
+      addToast('User created successfully!', 'success');
       setName('');
       setEmail('');
       setStudentId('');
@@ -100,9 +84,9 @@ const AdminUsers = () => {
     try {
       await api.patch(`/users/${userId}/${actionName}`);
       fetchUsers();
-      setActionSuccess(`User ${actionName}d successfully`);
+      addToast(`User ${actionName}d successfully`, 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || `Failed to ${actionName} user.`);
+      addToast(err.response?.data?.message || err.response?.data?.error || `Failed to ${actionName} user.`, 'error');
     } finally {
       setIsTogglingId(null);
     }
@@ -112,9 +96,9 @@ const AdminUsers = () => {
     try {
       await api.patch(`/users/${userId}/approve`);
       fetchUsers();
-      setActionSuccess('User approved successfully');
+      addToast('User approved successfully', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to approve user');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to approve user', 'error');
     }
   };
 
@@ -123,9 +107,9 @@ const AdminUsers = () => {
     try {
       await api.patch(`/users/${userId}/reject`);
       fetchUsers();
-      setActionSuccess('User request rejected');
+      addToast('User request rejected', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to reject user');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to reject user', 'error');
     }
   };
 
@@ -134,13 +118,13 @@ const AdminUsers = () => {
     try {
       await api.patch(`/users/${userId}/role`, { role: newRole });
       fetchUsers();
-      setActionSuccess('User role updated successfully');
+      addToast('User role updated successfully', 'success');
       
       const p = {...pendingRoles};
       delete p[userId];
       setPendingRoles(p);
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update role');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update role', 'error');
     } finally {
       setIsSavingRoleId(null);
     }
@@ -159,7 +143,7 @@ const AdminUsers = () => {
     try {
       setIsResettingPwd(true);
       await api.patch(`/users/${resettingPasswordUser.id}/password`, { password: newPassword });
-      setActionSuccess('Password reset successfully');
+      addToast('Password reset successfully', 'success');
       setResettingPasswordUser(null);
       setNewPassword('');
       setConfirmPassword('');
@@ -219,7 +203,13 @@ const AdminUsers = () => {
               </select>
             </div>
             <div>
-              <button type="submit" disabled={isCreating} className="btn-primary w-full h-[42px] mt-1 whitespace-nowrap disabled:opacity-50">
+              <button type="submit" disabled={isCreating} className="btn-primary w-full h-[42px] mt-1 whitespace-nowrap disabled:opacity-50 transition-all duration-200 flex justify-center items-center">
+                {isCreating && (
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
                 {isCreating ? 'Creating...' : 'Create User'}
               </button>
             </div>
@@ -266,7 +256,6 @@ const AdminUsers = () => {
             <option value="ADMIN">Admin</option>
           </select>
         </div>
-        {actionSuccess && <div className="m-4 text-sm text-green-600 bg-green-50 p-3 rounded">{actionSuccess}</div>}
         {error ? (
           <div className="p-4 text-red-500">{error}</div>
         ) : loading ? (
@@ -300,7 +289,7 @@ const AdminUsers = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className={!u.isActive ? "bg-gray-50 opacity-75" : ""}>
+                  <tr key={u.id} className={`${!u.isActive ? "bg-gray-50 opacity-75" : ""} hover:bg-gray-50 transition-colors duration-150`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.studentId || '-'}</td>
@@ -345,14 +334,14 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                       {u.approvalStatus === 'PENDING' ? (
                         <>
-                          <button onClick={() => handleApprove(u.id)} className="text-green-600 hover:text-green-900">Approve</button>
-                          <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900">Reject</button>
+                          <button onClick={() => handleApprove(u.id)} className="text-green-600 hover:text-green-900 transition-colors">Approve</button>
+                          <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900 transition-colors">Reject</button>
                         </>
                       ) : (
                         <>
                           <button 
                             onClick={() => { setResettingPasswordUser(u); setNewPassword(''); setConfirmPassword(''); setResetError(''); }}
-                            className="text-primary-600 hover:text-primary-900"
+                            className="text-primary-600 hover:text-primary-900 transition-colors"
                           >
                             Reset Password
                           </button>
@@ -360,7 +349,7 @@ const AdminUsers = () => {
                             <button 
                               onClick={() => handleToggleActive(u.id, u.isActive)}
                               disabled={isTogglingId === u.id}
-                              className={`${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} disabled:opacity-50`}
+                              className={`${u.isActive ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'} disabled:opacity-50 transition-colors`}
                             >
                               {isTogglingId === u.id ? (u.isActive ? 'Deactivating...' : 'Reactivating...') : (u.isActive ? 'Deactivate' : 'Reactivate')}
                             </button>
@@ -394,8 +383,14 @@ const AdminUsers = () => {
                 <input type="password" disabled={isResettingPwd} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button disabled={isResettingPwd} onClick={() => setResettingPasswordUser(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
-                <button disabled={isResettingPwd} onClick={submitPasswordReset} className="btn-primary disabled:opacity-50">
+                <button disabled={isResettingPwd} onClick={() => setResettingPasswordUser(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-all duration-200">Cancel</button>
+                <button disabled={isResettingPwd} onClick={submitPasswordReset} className="btn-primary disabled:opacity-50 transition-all duration-200 flex items-center justify-center">
+                  {isResettingPwd && (
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   {isResettingPwd ? 'Updating...' : 'Save Password'}
                 </button>
               </div>

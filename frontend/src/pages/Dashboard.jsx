@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { getStatusColor, getFeedbackColor, getFeedbackTypeLabel, formatLabel, formatRelativeTime } from '../utils/format';
+import { getStatusColor, getPriorityColor, getFeedbackColor, getFeedbackTypeLabel, formatLabel, formatRelativeTime } from '../utils/format';
 import { Ticket as TicketIcon, PlusCircle, Clock, AlertTriangle, MessageSquare, Inbox } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
@@ -11,6 +12,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { user } = useAuth();
+  const { addToast } = useToast();
   
   const [showNewModal, setShowNewModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -77,12 +79,13 @@ const Dashboard = () => {
       await api.post('/tickets', {
         title: newTitle, category: newCategory, description: newDesc, priority: newPriority
       });
+      addToast('Ticket created successfully', 'success');
       setShowNewModal(false);
       fetchStats();
       fetchTickets();
       setNewTitle(''); setNewDesc('');
     } catch (err) {
-      setCreateError(err.response?.data?.message || err.response?.data?.error || 'Failed to create ticket');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to create ticket', 'error');
     } finally {
       setIsCreating(false);
     }
@@ -239,12 +242,7 @@ const Dashboard = () => {
                         {formatLabel(t.status)}
                       </p>
                       <div className="flex items-center text-sm">
-                        <span className={`flex items-center ${
-                          t.priority === 'URGENT' ? 'text-red-600 font-medium' : 
-                          t.priority === 'HIGH' ? 'text-red-500 font-normal' : 
-                          t.priority === 'MEDIUM' ? 'text-gray-600 font-normal' : 
-                          'text-gray-400 font-normal'
-                        }`}>
+                        <span className={`px-2 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full ${getPriorityColor(t.priority)}`}>
                           {t.priority === 'URGENT' && <AlertTriangle className="w-3.5 h-3.5 mr-1 inline" />}
                           {formatLabel(t.priority)}
                         </span>
@@ -259,10 +257,9 @@ const Dashboard = () => {
       </div>
 
       {showNewModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 transition-opacity duration-200">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full transform transition-all duration-200 scale-100 shadow-xl">
             <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Submit New Ticket</h3>
-            {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
             <form onSubmit={handleCreateTicket} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Title</label>
@@ -293,8 +290,14 @@ const Dashboard = () => {
                 <textarea required disabled={isCreating} rows={4} value={newDesc} onChange={e=>setNewDesc(e.target.value)} className="input-field" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" disabled={isCreating} onClick={()=>setShowNewModal(false)} className="btn-secondary">Cancel</button>
-                <button type="submit" disabled={isCreating} className="btn-primary">
+                <button type="button" disabled={isCreating} onClick={()=>setShowNewModal(false)} className="btn-secondary transition-all duration-200 disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={isCreating} className="btn-primary transition-all duration-200 flex items-center disabled:opacity-50">
+                  {isCreating && (
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
                   {isCreating ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
@@ -313,6 +316,7 @@ const StatCard = ({ title, value, highlight, icon: Icon, titleTooltip }) => (
       {Icon && <Icon className={`h-5 w-5 ${highlight ? 'text-red-500' : 'text-gray-400'}`} />}
     </div>
     <dd className={`mt-1 text-3xl font-semibold ${highlight ? 'text-red-600' : 'text-gray-900'}`}>{value}</dd>
+    <p className="mt-2 text-xs text-gray-400">All time</p>
   </div>
 );
 

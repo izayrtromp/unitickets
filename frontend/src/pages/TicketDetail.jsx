@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
-import { useAuth } from '../context/AuthContext';
 import { ArrowLeft } from 'lucide-react';
-import { getStatusColor, getFeedbackColor, getFeedbackTypeLabel, formatRelativeTime, formatLabel } from '../utils/format';
+import { getStatusColor, getPriorityColor, getFeedbackColor, getFeedbackTypeLabel, formatRelativeTime, formatLabel } from '../utils/format';
+import { useToast } from '../context/ToastContext';
 
 const TicketDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
+  const { addToast } = useToast();
   
   const [ticket, setTicket] = useState(null);
   const [commentText, setCommentText] = useState('');
@@ -35,25 +35,6 @@ const TicketDetail = () => {
   const [meetings, setMeetings] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState('');
   const [isAddingToAgenda, setIsAddingToAgenda] = useState(false);
-  const [agendaSuccess, setAgendaSuccess] = useState('');
-  const [agendaError, setAgendaError] = useState('');
-  const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(''), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
-
-  useEffect(() => {
-    if (!taskSuccess) return;
-    const t = setTimeout(() => {
-      setTaskSuccess('');
-      setShowTaskModal(false);
-    }, 2000);
-    return () => clearTimeout(t);
-  }, [taskSuccess]);
-
   useEffect(() => {
     fetchTicket();
     if (['CLASS_REP', 'ADMIN'].includes(user.role)) {
@@ -61,15 +42,6 @@ const TicketDetail = () => {
       fetchUpcomingMeetings();
     }
   }, [id]);
-
-  useEffect(() => {
-    if (!agendaSuccess) return;
-    const t = setTimeout(() => {
-      setAgendaSuccess('');
-      setShowAgendaModal(false);
-    }, 2000);
-    return () => clearTimeout(t);
-  }, [agendaSuccess]);
 
   useEffect(() => {
     if (!loading && ticket) {
@@ -136,9 +108,9 @@ const TicketDetail = () => {
       await api.put(`/tickets/${id}`, { status: newStatus });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
-      setToast(`Ticket marked as ${newStatus.replace('_', ' ')}`);
+      addToast(`Ticket marked as ${newStatus.replace('_', ' ')}`, 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update ticket status');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update ticket status', 'error');
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -150,8 +122,9 @@ const TicketDetail = () => {
       await api.put(`/tickets/${id}`, { assignedToId: user.id });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
+      addToast('Ticket assigned to you', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to assign ticket');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to assign ticket', 'error');
     } finally {
       setIsAssigning(false);
     }
@@ -163,8 +136,9 @@ const TicketDetail = () => {
       await api.put(`/tickets/${id}`, { assignedToId: selectedAssignee || null });
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
+      addToast('Ticket assignment updated', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to update assignment');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to update assignment', 'error');
     } finally {
       setIsAssigning(false);
     }
@@ -179,8 +153,9 @@ const TicketDetail = () => {
       setCommentText('');
       fetchTicket();
       window.dispatchEvent(new Event('refreshNotifications'));
+      addToast('Comment posted', 'success');
     } catch (err) {
-      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to post comment');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to post comment', 'error');
     } finally {
       setIsPostingComment(false);
     }
@@ -198,9 +173,10 @@ const TicketDetail = () => {
         dueDate: taskDueDate || null,
         ticketId: ticket.id
       });
-      setTaskSuccess('Task created successfully');
+      addToast('Task created successfully', 'success');
+      setShowTaskModal(false);
     } catch (err) {
-      setTaskError(err.response?.data?.message || err.response?.data?.error || 'Failed to create task');
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to create task', 'error');
     } finally {
       setIsCreatingTask(false);
     }
@@ -233,12 +209,13 @@ const TicketDetail = () => {
     setAgendaError('');
     try {
       await api.post(`/meetings/${selectedMeeting}/agenda`, { ticketId: ticket.id });
-      setAgendaSuccess('Added to meeting agenda');
+      addToast('Added to meeting agenda', 'success');
+      setShowAgendaModal(false);
     } catch (err) {
       if (err.response?.status === 409) {
-        setAgendaError('This ticket is already on that meeting agenda.');
+        addToast('This ticket is already on that meeting agenda.', 'error');
       } else {
-        setAgendaError(err.response?.data?.message || err.response?.data?.error || 'Failed to add to agenda');
+        addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to add to agenda', 'error');
       }
     } finally {
       setIsAddingToAgenda(false);
@@ -312,7 +289,7 @@ const TicketDetail = () => {
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500">Category & Priority</dt>
               <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
-                <span>{ticket.category} • <span className="font-semibold">{ticket.priority}</span></span>
+                <span>{ticket.category} • <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ml-1 ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span></span>
                 {ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${getFeedbackColor(ticket.type)}`}>
                     {getFeedbackTypeLabel(ticket.type)}
@@ -424,7 +401,7 @@ const TicketDetail = () => {
               disabled={isPostingComment}
             />
             <div className="flex justify-end">
-              <button type="submit" className="btn-primary disabled:opacity-50" disabled={!commentText.trim() || isPostingComment}>
+              <button type="submit" className="btn-primary disabled:opacity-50 transition-all duration-200" disabled={!commentText.trim() || isPostingComment}>
                 {isPostingComment ? 'Posting...' : 'Post Comment'}
               </button>
             </div>
@@ -511,13 +488,6 @@ const TicketDetail = () => {
               </div>
             </form>
           </div>
-        </div>
-      )}
-
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300 z-50">
-          {toast}
         </div>
       )}
     </div>

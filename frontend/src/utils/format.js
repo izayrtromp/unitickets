@@ -28,12 +28,38 @@ export function formatLabel(str) {
 
 export function getStatusColor(status) {
   switch(status) {
-    case 'NEW': return 'bg-gray-100 text-gray-800';
-    case 'IN_PROGRESS': return 'bg-blue-100 text-blue-800';
-    case 'CLOSED': return 'bg-green-100 text-green-800';
-    case 'RESOLVED': return 'bg-teal-100 text-teal-800';
-    case 'WAITING': return 'bg-yellow-100 text-yellow-800';
-    default: return 'bg-gray-100 text-gray-800';
+    case 'NEW':
+    case 'TODO':
+    case 'PENDING':
+    case 'WAITING':
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+    case 'IN_PROGRESS':
+    case 'DISCUSSED':
+    case 'FOLLOW_UP_REQUIRED':
+      return 'bg-blue-100 text-blue-800 border border-blue-200';
+    case 'CLOSED':
+    case 'RESOLVED':
+    case 'DONE':
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-800 border border-green-200';
+    case 'OVERDUE':
+      return 'bg-red-100 text-red-800 border border-red-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
+  }
+}
+
+export function getPriorityColor(priority) {
+  switch(priority) {
+    case 'URGENT':
+    case 'HIGH':
+      return 'bg-red-100 text-red-800 border border-red-200';
+    case 'MEDIUM':
+      return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+    case 'LOW':
+      return 'bg-green-100 text-green-800 border border-green-200';
+    default:
+      return 'bg-gray-100 text-gray-800 border border-gray-200';
   }
 }
 
