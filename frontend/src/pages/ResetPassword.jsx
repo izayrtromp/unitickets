@@ -24,7 +24,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) return;
+    if (!token || isSubmitting) return;
     
     setError('');
     setMessage('');
