@@ -28,13 +28,26 @@ app.use(cors({
 
 app.use(express.json());
 
-const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+const apiReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Relaxed for normal reads and dashboard loads
   message: { message: 'Too many requests. Please try again later.' }
 });
 
-app.use(generalLimiter);
+const apiWriteLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // 60 write actions per minute per IP
+  message: { message: 'Too many requests. Please try again later.' }
+});
+
+// Apply distinct limiters based on HTTP method
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    return apiReadLimiter(req, res, next);
+  } else {
+    return apiWriteLimiter(req, res, next);
+  }
+});
 
 // Routes
 const authRoutes = require('./routes/auth');
