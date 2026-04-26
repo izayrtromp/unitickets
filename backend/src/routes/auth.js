@@ -132,7 +132,11 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(403).json({ error: 'This account is not active.' });
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role, name: user.name, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign(
+      { id: user.id, role: user.role }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '1h' }
+    );
     
     // Omit password hash in response
     const { passwordHash, ...userData } = user;
