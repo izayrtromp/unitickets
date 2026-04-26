@@ -226,6 +226,7 @@ const MeetingDetail = () => {
   if (!meeting) {
     return <div className="p-8 text-center text-red-500">Meeting not found</div>;
   }
+  if (!user) return <div className="p-8 text-center animate-pulse">Loading meeting data...</div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">

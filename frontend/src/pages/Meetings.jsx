@@ -99,7 +99,9 @@ const Meetings = () => {
 
   const isUpcoming = (dateString) => new Date(dateString) > new Date();
 
-  const filteredMeetings = meetings.filter(m => {
+  const safeMeetings = Array.isArray(meetings) ? meetings : [];
+
+  const filteredMeetings = safeMeetings.filter(m => {
     if (filter === 'all') return true;
     const upcoming = isUpcoming(m.meetingDate);
     return filter === 'upcoming' ? upcoming : !upcoming;

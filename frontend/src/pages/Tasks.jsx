@@ -85,8 +85,10 @@ const Tasks = () => {
     return new Date(task.dueDate) < new Date();
   };
 
-  const filteredTasks = tasks.filter(t => {
-    if (filter === 'ASSIGNED_TO_ME') return t.assignedTo?.id === user.id;
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+
+  const filteredTasks = safeTasks.filter(t => {
+    if (filter === 'ASSIGNED_TO_ME') return t.assignedTo?.id === user?.id;
     if (filter === 'TODO') return t.status === 'TODO';
     if (filter === 'IN_PROGRESS') return t.status === 'IN_PROGRESS';
     if (filter === 'DONE') return t.status === 'DONE';
@@ -94,6 +96,8 @@ const Tasks = () => {
   });
 
 
+
+  if (!user) return <div className="p-8 text-center animate-pulse">Loading tasks...</div>;
 
   return (
     <div className="space-y-6">

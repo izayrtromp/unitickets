@@ -239,6 +239,7 @@ const TicketDetail = () => {
   );
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   if (!ticket) return null;
+  if (!user) return <div className="p-8 text-center animate-pulse">Loading user data...</div>;
 
   const timeline = ticket 
     ? [
@@ -311,7 +312,7 @@ const TicketDetail = () => {
                       className="input-field py-1 text-sm border-gray-300 w-48"
                     >
                       <option value="">Unassigned</option>
-                      {users.filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
+                      {(Array.isArray(users) ? users : []).filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
                         <option key={u.id} value={u.id}>{u.name} ({formatLabel(u.role)})</option>
                       ))}
                     </select>

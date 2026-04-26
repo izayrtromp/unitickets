@@ -91,6 +91,10 @@ const Dashboard = () => {
     }
   };
 
+  if (!user) return <div className="p-8 text-center animate-pulse">Loading dashboard...</div>;
+
+  const safeTickets = Array.isArray(tickets) ? tickets : [];
+
   return (
     <div className="space-y-6">
       {/* Stats row */}
@@ -204,7 +208,7 @@ const Dashboard = () => {
                 </div>
               ))}
             </div>
-          ) : tickets.length === 0 ? (
+          ) : safeTickets.length === 0 ? (
             <div className="p-12 text-center flex flex-col items-center justify-center">
               <Inbox className="h-12 w-12 text-gray-400 mb-3" />
               <h3 className="text-lg font-medium text-gray-900">No tickets found</h3>
@@ -215,7 +219,7 @@ const Dashboard = () => {
               </p>
             </div>
           ) : (
-            tickets.map((t) => (
+            safeTickets.map((t) => (
               <li key={t.id} className={`bg-white transition-all ${
                 t.priority === 'URGENT' ? 'border-l-2 border-red-500' : 
                 t.priority === 'HIGH' ? 'border-l-2 border-red-300' : ''

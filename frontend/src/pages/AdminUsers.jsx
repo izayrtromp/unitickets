@@ -17,7 +17,11 @@ const AdminUsers = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('STUDENT');
   const [createError, setCreateError] = useState('');
+  const [createSuccess, setCreateSuccess] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
   const [isResettingPwd, setIsResettingPwd] = useState(false);
+  const [isTogglingId, setIsTogglingId] = useState(null);
+  const [isSavingRoleId, setIsSavingRoleId] = useState(null);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -154,13 +158,17 @@ const AdminUsers = () => {
     }
   };
 
-  const filteredUsers = users.filter(u => {
+  const safeUsers = Array.isArray(users) ? users : [];
+
+  const filteredUsers = safeUsers.filter(u => {
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
     const matchesTab = viewTab === 'PENDING' ? u.approvalStatus === 'PENDING' : u.approvalStatus !== 'PENDING';
     return matchesSearch && matchesRole && matchesTab;
   });
+
+  if (!currentUser) return <div className="p-8 text-center animate-pulse">Loading admin access...</div>;
 
 
 
@@ -230,9 +238,9 @@ const AdminUsers = () => {
             className={`py-3 px-6 text-sm font-medium flex items-center ${viewTab === 'PENDING' ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Pending Approvals
-            {users.filter(u => u.approvalStatus === 'PENDING').length > 0 && (
+            {safeUsers.filter(u => u.approvalStatus === 'PENDING').length > 0 && (
               <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">
-                {users.filter(u => u.approvalStatus === 'PENDING').length}
+                {safeUsers.filter(u => u.approvalStatus === 'PENDING').length}
               </span>
             )}
           </button>
