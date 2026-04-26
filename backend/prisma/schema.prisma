@@ -18,6 +18,7 @@ model User {
   approvalStatus String  @default("APPROVED")
   isEmailVerified Boolean @default(true)
   verificationToken String?
+  verificationTokenExpires DateTime?
   createdAt    DateTime  @default(now())
 
   ticketsSubmitted Ticket[]  @relation("Submitter")

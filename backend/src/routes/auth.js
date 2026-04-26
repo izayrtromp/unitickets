@@ -65,6 +65,7 @@ router.post('/register-request', registerLimiter, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
 
     await prisma.user.create({
       data: {
@@ -76,7 +77,8 @@ router.post('/register-request', registerLimiter, async (req, res) => {
         isActive: false,
         isEmailVerified: false,
         approvalStatus: 'PENDING',
-        verificationToken
+        verificationToken,
+        verificationTokenExpires
       }
     });
 
@@ -150,13 +152,18 @@ router.post('/verify-email', async (req, res) => {
     const user = await prisma.user.findFirst({ where: { verificationToken: token } });
     if (!user) return res.status(400).json({ error: 'Invalid or expired verification token' });
 
+    if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
+      return res.status(400).json({ error: 'Verification link expired. Please request a new one.' });
+    }
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
         isEmailVerified: true,
         approvalStatus: 'APPROVED',
         isActive: true,
-        verificationToken: null
+        verificationToken: null,
+        verificationTokenExpires: null
       }
     });
 
@@ -196,9 +203,14 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const verificationTokenExpires = new Date(Date.now() + 3600000); // 1 hour from now
+    
     await prisma.user.update({
       where: { id: user.id },
-      data: { verificationToken }
+      data: { 
+        verificationToken,
+        verificationTokenExpires
+      }
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
