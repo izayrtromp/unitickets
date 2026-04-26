@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { sendVerificationEmail } = require('../utils/email');
+const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { isValidUAEmail } = require('../utils/validation');
 const { PrismaClient } = require('@prisma/client');
 const rateLimit = require('express-rate-limit');
@@ -226,6 +226,91 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     }
 
     res.json({ message: genericSuccess });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required.' });
+    }
+
+    if (!isValidUAEmail(email)) {
+      return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
+    }
+
+    const genericSuccess = 'If an account exists for this email, a password reset link has been sent.';
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ message: genericSuccess });
+    }
+
+    const passwordResetToken = crypto.randomBytes(32).toString('hex');
+    const passwordResetExpires = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordResetToken,
+        passwordResetExpires
+      }
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password?token=${passwordResetToken}`;
+
+    await sendPasswordResetEmail(email, resetUrl);
+
+    res.json({ message: genericSuccess });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, password, confirmPassword } = req.body;
+
+    if (!token || !password || !confirmPassword) {
+      return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match.' });
+    }
+
+    const user = await prisma.user.findFirst({ where: { passwordResetToken: token } });
+    
+    if (!user) {
+      return res.status(400).json({ error: 'Password reset link expired or invalid. Please request a new one.' });
+    }
+
+    if (user.passwordResetExpires && user.passwordResetExpires < new Date()) {
+      return res.status(400).json({ error: 'Password reset link expired or invalid. Please request a new one.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        passwordHash,
+        passwordResetToken: null,
+        passwordResetExpires: null
+      }
+    });
+
+    res.json({ message: 'Password reset successful. Please log in.' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

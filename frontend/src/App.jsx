@@ -7,6 +7,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ResendVerification from './pages/ResendVerification';
 import VerifyEmail from './pages/VerifyEmail';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import TicketDetail from './pages/TicketDetail';
 import AdminUsers from './pages/AdminUsers';
@@ -43,6 +45,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/resend-verification" element={<ResendVerification />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />

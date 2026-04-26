@@ -121,6 +121,9 @@ const Login = () => {
               <Link to="/register" className="text-sm text-primary-600 hover:text-primary-800 font-medium">
                 Request an account
               </Link>
+              <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-gray-700 font-medium">
+                Forgot password?
+              </Link>
               <Link to="/resend-verification" className="text-xs text-gray-500 hover:text-gray-700 font-medium">
                 Resend verification email
               </Link>

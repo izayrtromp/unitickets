@@ -19,6 +19,8 @@ model User {
   isEmailVerified Boolean @default(true)
   verificationToken String?
   verificationTokenExpires DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
   createdAt    DateTime  @default(now())
 
   ticketsSubmitted Ticket[]  @relation("Submitter")
