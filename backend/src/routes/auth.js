@@ -29,6 +29,11 @@ const resendLimiter = rateLimit({
 
 const resendCooldowns = new Map(); // in-memory cache for rate-limiting
 
+/**
+ * Submits a new user registration request.
+ * Security reasoning: Hashes passwords with bcrypt immediately. Generates a secure, 
+ * expiring token for email validation to prevent spam account creation.
+ */
 router.post('/register-request', registerLimiter, async (req, res) => {
   try {
     const { name, studentId, email, password, confirmPassword } = req.body;
@@ -107,6 +112,11 @@ router.post('/register-request', registerLimiter, async (req, res) => {
   }
 });
 
+/**
+ * Authenticates a user and issues a JWT.
+ * Security reasoning: Verifies passwords against bcrypt hashes securely. 
+ * Issues a short-lived (1h) JWT containing minimal PII to mitigate token interception risks.
+ */
 router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -148,6 +158,11 @@ router.post('/login', loginLimiter, async (req, res) => {
   }
 });
 
+/**
+ * Verifies a user's email via token.
+ * Security reasoning: Checks token expiry strictly and nullifies it upon success 
+ * to guarantee the token is single-use only.
+ */
 router.post('/verify-email', async (req, res) => {
   try {
     const { token } = req.body;
@@ -178,6 +193,11 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
+/**
+ * Resends a verification email.
+ * Security reasoning: Re-generates a fresh token, explicitly expiring the previous one. 
+ * Employs a generic success message to prevent user enumeration attacks.
+ */
 router.post('/resend-verification', resendLimiter, async (req, res) => {
   try {
     const { email } = req.body;
@@ -232,6 +252,11 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
   }
 });
 
+/**
+ * Initiates the password recovery flow.
+ * Security reasoning: Never reveals if an email exists in the database. Generates 
+ * a secure 1-hour token to minimize the attack window for compromised inboxes.
+ */
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -273,6 +298,11 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
+/**
+ * Processes a password reset via token.
+ * Security reasoning: Atomically updates the bcrypt hash and nullifies the reset 
+ * tokens in a single database transaction, ensuring strict one-time use.
+ */
 router.post('/reset-password', async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;

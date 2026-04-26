@@ -138,7 +138,8 @@ router.post('/:id/agenda', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN
       data: {
         meetingId,
         ticketId,
-        status: 'PENDING'
+        status: 'PENDING',
+        addedById: req.user.id
       },
       include: { ticket: true }
     });

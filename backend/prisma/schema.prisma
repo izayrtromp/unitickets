@@ -31,6 +31,7 @@ model User {
   tasksAssigned    Task[]    @relation("TaskAssignee")
   tasksCreated     Task[]    @relation("TaskCreator")
   meetingsCreated  Meeting[] @relation("MeetingCreator")
+  agendaItemsAdded MeetingAgendaItem[] @relation("AgendaItemAdder")
 }
 
 model Ticket {
@@ -144,5 +145,9 @@ model MeetingAgendaItem {
   outcome         String?
   status          String   @default("PENDING") // PENDING, DISCUSSED, FOLLOW_UP_REQUIRED, RESOLVED
   
+  addedById       String
+  addedBy         User     @relation("AgendaItemAdder", fields: [addedById], references: [id])
+  createdAt       DateTime @default(now())
+
   @@unique([meetingId, ticketId])
 }

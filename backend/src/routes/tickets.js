@@ -76,6 +76,9 @@ router.get('/:id', authenticateToken, async (req, res) => {
         activities: {
           include: { user: { select: { name: true, role: true } } },
           orderBy: { createdAt: 'asc' }
+        },
+        agendaItems: {
+          include: { meeting: true }
         }
       }
     });

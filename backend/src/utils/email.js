@@ -1,5 +1,10 @@
 const nodemailer = require('nodemailer');
 
+/**
+ * Dispatches a password reset email to a user.
+ * Security reasoning: Delivers a time-sensitive, unguessable recovery link.
+ * Includes a disclaimer to ignore the email if unauthorized, protecting user awareness.
+ */
 const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -40,6 +45,11 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   }
 };
 
+/**
+ * Dispatches an initial account verification email.
+ * Security reasoning: Verifies email ownership via an out-of-band communication 
+ * channel before granting access to the system.
+ */
 const sendVerificationEmail = async (toEmail, verificationUrl) => {
   try {
     const transporter = nodemailer.createTransport({

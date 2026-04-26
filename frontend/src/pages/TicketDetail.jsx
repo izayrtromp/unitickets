@@ -37,6 +37,9 @@ const TicketDetail = () => {
   const [meetings, setMeetings] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState('');
   const [isAddingToAgenda, setIsAddingToAgenda] = useState(false);
+  const [agendaError, setAgendaError] = useState('');
+  const [agendaSuccess, setAgendaSuccess] = useState('');
+
   useEffect(() => {
     fetchTicket();
     if (['CLASS_REP', 'ADMIN'].includes(user.role)) {
@@ -213,6 +216,7 @@ const TicketDetail = () => {
       await api.post(`/meetings/${selectedMeeting}/agenda`, { ticketId: ticket.id });
       addToast('Added to meeting agenda', 'success');
       setShowAgendaModal(false);
+      fetchTicket();
     } catch (err) {
       if (err.response?.status === 409) {
         addToast('This ticket is already on that meeting agenda.', 'error');
@@ -274,8 +278,12 @@ const TicketDetail = () => {
           <div className="flex items-center space-x-3">
             {['CLASS_REP', 'ADMIN'].includes(user.role) && (
               <>
-                <button onClick={openAgendaModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
-                  Add to Agenda
+                <button 
+                  onClick={openAgendaModal} 
+                  disabled={ticket.agendaItems?.length > 0}
+                  className={`px-3 py-1 text-xs font-medium rounded border ${ticket.agendaItems?.length > 0 ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm'}`}
+                >
+                  {ticket.agendaItems?.length > 0 ? 'Added to Agenda' : 'Add to Agenda'}
                 </button>
                 <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
                   Create Task
