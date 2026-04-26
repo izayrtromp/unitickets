@@ -27,6 +27,12 @@ const resendLimiter = rateLimit({
   message: { message: 'Too many requests. Please try again later.' }
 });
 
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: { message: 'Too many requests. Please try again later.' }
+});
+
 const resendCooldowns = new Map(); // in-memory cache for rate-limiting
 
 /**
@@ -257,7 +263,7 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
  * Security reasoning: Never reveals if an email exists in the database. Generates 
  * a secure 1-hour token to minimize the attack window for compromised inboxes.
  */
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {

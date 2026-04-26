@@ -39,20 +39,27 @@ router.post('/', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), async 
     const { title, description, status, dueDate, ticketId, assignedToId } = req.body;
 
     if (!title || !assignedToId) {
-      return res.status(400).json({ error: 'Title and assigned user are required' });
+      return res.status(400).json({ message: 'Title and assigned user are required' });
     }
 
     if (status && !VALID_STATUSES.includes(status)) {
-      return res.status(400).json({ error: 'Invalid task status' });
+      return res.status(400).json({ message: 'Invalid task status' });
     }
 
     if (dueDate && isNaN(Date.parse(dueDate))) {
-      return res.status(400).json({ error: 'Invalid due date' });
+      return res.status(400).json({ message: 'Invalid due date' });
+    }
+
+    if (ticketId) {
+      const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+      if (!ticket) {
+        return res.status(400).json({ message: 'Linked ticket not found.' });
+      }
     }
 
     const assignee = await prisma.user.findUnique({ where: { id: assignedToId } });
     if (!assignee || !['CLASS_REP', 'ADMIN'].includes(assignee.role) || !assignee.isActive) {
-      return res.status(400).json({ error: 'Invalid user for assignment' });
+      return res.status(400).json({ message: 'Invalid user for assignment' });
     }
 
     const task = await prisma.task.create({

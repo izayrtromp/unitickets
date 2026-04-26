@@ -99,10 +99,21 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
+const VALID_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'];
+const VALID_TYPES = ['STANDARD', 'BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'];
+
 // Create ticket (Students, Reps, Admins)
 router.post('/', authenticateToken, authorizeRoles('STUDENT', 'CLASS_REP', 'ADMIN'), async (req, res) => {
   try {
     const { title, category, description, priority, type } = req.body;
+
+    if (priority && !VALID_PRIORITIES.includes(priority)) {
+      return res.status(400).json({ message: 'Invalid priority value.' });
+    }
+
+    if (type && !VALID_TYPES.includes(type)) {
+      return res.status(400).json({ message: 'Invalid ticket type.' });
+    }
     const newTicket = await prisma.ticket.create({
       data: {
         title,

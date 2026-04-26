@@ -168,7 +168,7 @@ router.patch('/:meetingId/agenda/:itemId', authenticateToken, authorizeRoles('CL
   const validStatuses = ['PENDING', 'DISCUSSED', 'FOLLOW_UP_REQUIRED', 'RESOLVED', 'ESCALATED'];
 
   if (status && !validStatuses.includes(status)) {
-    return res.status(400).json({ error: 'Invalid agenda item status' });
+    return res.status(400).json({ message: 'Invalid agenda status.' });
   }
 
   const data = {};
@@ -183,7 +183,14 @@ router.patch('/:meetingId/agenda/:itemId', authenticateToken, authorizeRoles('CL
       include: { ticket: true }
     });
 
-    if (!oldItem) return res.status(404).json({ error: 'Agenda item not found' });
+    if (!oldItem) return res.status(404).json({ message: 'Agenda item not found' });
+
+    if (status === 'RESOLVED') {
+      const finalOutcome = outcome !== undefined ? outcome : oldItem.outcome;
+      if (!finalOutcome || !finalOutcome.trim()) {
+        return res.status(400).json({ message: 'Outcome is required before marking an agenda item as resolved.' });
+      }
+    }
 
     const updatedItem = await prisma.meetingAgendaItem.update({
       where: { id: req.params.itemId },
