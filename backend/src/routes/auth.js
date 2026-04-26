@@ -5,12 +5,31 @@ const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../utils/email');
 const { isValidUAEmail } = require('../utils/validation');
 const { PrismaClient } = require('@prisma/client');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const prisma = new PrismaClient();
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many requests. Please try again later.' }
+});
+
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { message: 'Too many requests. Please try again later.' }
+});
+
+const resendLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 3,
+  message: { message: 'Too many requests. Please try again later.' }
+});
+
 const resendCooldowns = new Map(); // in-memory cache for rate-limiting
 
-router.post('/register-request', async (req, res) => {
+router.post('/register-request', registerLimiter, async (req, res) => {
   try {
     const { name, studentId, email, password, confirmPassword } = req.body;
 
@@ -86,7 +105,7 @@ router.post('/register-request', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await prisma.user.findUnique({ where: { email } });
@@ -148,7 +167,7 @@ router.post('/verify-email', async (req, res) => {
   }
 });
 
-router.post('/resend-verification', async (req, res) => {
+router.post('/resend-verification', resendLimiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
