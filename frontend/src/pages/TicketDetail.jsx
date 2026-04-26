@@ -271,8 +271,13 @@ const TicketDetail = () => {
         <div className="px-4 py-5 sm:px-6 flex justify-between items-start">
           <div>
             <h3 className="text-xl leading-6 font-medium text-gray-900">{ticket.title}</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <p className="mt-1 max-w-2xl text-sm text-gray-500 flex items-center">
               Submitted by {ticket.submitter.name} • Updated {formatRelativeTime(ticket.updatedAt)}
+              {(!['RESOLVED', 'CLOSED'].includes(ticket.status) && Math.floor((new Date() - new Date(ticket.updatedAt)) / (1000 * 60 * 60 * 24)) >= 7) && (
+                <span className="ml-2 text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded border border-red-100 flex items-center">
+                  ⚠️ Aging ({Math.floor((new Date() - new Date(ticket.updatedAt)) / (1000 * 60 * 60 * 24))}d inactive)
+                </span>
+              )}
             </p>
           </div>
           <div className="flex items-center space-x-3">

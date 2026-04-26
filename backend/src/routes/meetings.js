@@ -32,10 +32,12 @@ router.get('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
         createdBy: { select: { id: true, name: true, role: true } },
         agendaItems: {
           include: {
+            addedBy: { select: { id: true, name: true } },
             ticket: {
               include: {
                 submitter: { select: { id: true, name: true } },
-                assignedTo: { select: { id: true, name: true } }
+                assignedTo: { select: { id: true, name: true } },
+                tasks: { select: { id: true, title: true, status: true, assignedTo: { select: { name: true } } } }
               }
             }
           }
@@ -163,7 +165,7 @@ router.post('/:id/agenda', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN
 // Update agenda item
 router.patch('/:meetingId/agenda/:itemId', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), async (req, res) => {
   const { discussionNotes, outcome, status } = req.body;
-  const validStatuses = ['PENDING', 'DISCUSSED', 'FOLLOW_UP_REQUIRED', 'RESOLVED'];
+  const validStatuses = ['PENDING', 'DISCUSSED', 'FOLLOW_UP_REQUIRED', 'RESOLVED', 'ESCALATED'];
 
   if (status && !validStatuses.includes(status)) {
     return res.status(400).json({ error: 'Invalid agenda item status' });
