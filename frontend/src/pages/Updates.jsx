@@ -1,6 +1,7 @@
 import React from 'react';
 import { releaseNotes } from '../constants/releaseNotes';
 import Badge from '../components/Badge';
+import { getUpdateAccentColor } from '../utils/format';
 
 const Updates = () => {
   return (
@@ -12,23 +13,24 @@ const Updates = () => {
         </p>
       </div>
 
-      <div className="space-y-8">
+      <div className="space-y-10">
         {releaseNotes.map((note, index) => (
           <div key={index} className="bg-white dark:bg-gray-800 shadow-sm sm:rounded-xl transition-colors border border-gray-100 dark:border-gray-700 overflow-hidden relative">
             
-            {/* Timeline connector visual (optional styling element) */}
-            <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary-500 rounded-l-xl hidden sm:block"></div>
+            <div className={`absolute left-0 top-0 bottom-0 w-1 ${getUpdateAccentColor(note.type)} hidden sm:block`}></div>
             
-            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{note.title}</h3>
-                <Badge type="update" value={note.type} className="uppercase tracking-wider px-2.5 py-1 text-[10px]" />
-                <span className="text-sm font-semibold text-gray-600 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-2.5 py-0.5 rounded-full">
-                  {note.version}
-                </span>
+            <div className="px-6 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">
+                    {note.version}
+                  </span>
+                  <Badge type="update" value={note.type} className="uppercase tracking-wider px-2.5 py-1 text-[10px]" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{note.title}</h3>
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">
-                {new Date(note.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+              <div className="text-sm text-gray-400 dark:text-gray-500 opacity-90 sm:mt-1 font-medium whitespace-nowrap">
+                {new Date(note.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
               </div>
             </div>
             
@@ -38,15 +40,15 @@ const Updates = () => {
               </p>
               
               {note.highlights && note.highlights.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-3 flex items-center">
-                    <span className="mr-2">✨</span> Highlights
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+                  <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 tracking-wide">
+                    Highlights
                   </h4>
-                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-6 text-gray-700 dark:text-gray-300">
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-gray-600 dark:text-gray-400">
                     {note.highlights.map((highlight, idx) => (
                       <li key={idx} className="flex items-start">
-                        <span className="text-primary-500 mr-2 mt-1 flex-shrink-0">•</span>
-                        <span className="leading-tight pt-0.5">{highlight}</span>
+                        <span className="text-gray-400 dark:text-gray-500 mr-2 flex-shrink-0">—</span>
+                        <span className="leading-relaxed">{highlight}</span>
                       </li>
                     ))}
                   </ul>
