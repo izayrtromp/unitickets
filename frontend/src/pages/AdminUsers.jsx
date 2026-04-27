@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { formatLabel, formatRelativeTime, getRoleColor, getRoleIcon } from '../utils/format';
+import Badge from '../components/Badge';
 import { useToast } from '../context/ToastContext';
 
 const AdminUsers = () => {
@@ -54,13 +55,13 @@ const AdminUsers = () => {
     setCreateError('');
     setCreateSuccess('');
     
-    if (password.length < 6) {
-      setCreateError('Password must be at least 6 characters.');
+    if (password && password.length < 6) {
+      // Handled by inline validation, but prevent submit
       return;
     }
     
     if (role === 'STUDENT' && !studentId.trim()) {
-      setCreateError('Student ID is required for students.');
+      // Handled by inline validation, but prevent submit
       return;
     }
 
@@ -182,10 +183,10 @@ const AdminUsers = () => {
       <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg transition-colors">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">Create New User</h3>
-          {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
           {createSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{createSuccess}</div>}
+          {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
           
-          <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
+          <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 items-start">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
               <input type="text" required disabled={isCreating} value={name} onChange={(e) => setName(e.target.value)} className="input-field mt-1 w-full" />
@@ -197,10 +198,16 @@ const AdminUsers = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Student ID</label>
               <input type="text" disabled={isCreating} value={studentId} onChange={(e) => setStudentId(e.target.value)} className={`input-field mt-1 w-full ${role === 'STUDENT' && !studentId.trim() ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
+              {role === 'STUDENT' && !studentId.trim() && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">Student ID is required.</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-              <input type="password" required minLength="6" disabled={isCreating} value={password} onChange={(e) => setPassword(e.target.value)} className="input-field mt-1 w-full" />
+              <input type="password" required minLength="6" disabled={isCreating} value={password} onChange={(e) => setPassword(e.target.value)} className={`input-field mt-1 w-full ${password.length > 0 && password.length < 6 ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} />
+              {password.length > 0 && password.length < 6 && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">Must be at least 6 characters.</p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
@@ -245,7 +252,7 @@ const AdminUsers = () => {
             )}
           </button>
         </div>
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
+        <div className="p-4 mb-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
           <input
             type="text"
             placeholder="Search by name or email..."
@@ -303,19 +310,16 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.studentId || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {u.id === currentUser?.id ? (
-                        <span className={`px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${getRoleColor(u.role)}`}>
-                          <span className="mr-1.5">{getRoleIcon(u.role)}</span>
-                          {formatLabel(u.role)}
-                        </span>
+                        <Badge type="role" value={u.role} />
                       ) : (
                         <div className="flex items-center space-x-2">
                           <div className={`flex items-center rounded-full focus-within:ring-2 focus-within:ring-green-500 ${getRoleColor(pendingRoles[u.id] || u.role)} transition-colors duration-200`}>
-                            <span className="pl-2.5 text-xs select-none pointer-events-none">{getRoleIcon(pendingRoles[u.id] || u.role)}</span>
+                            <span className="pl-3 text-xs select-none pointer-events-none">{getRoleIcon(pendingRoles[u.id] || u.role)}</span>
                             <select
                               disabled={isSavingRoleId === u.id}
                               value={pendingRoles[u.id] || u.role}
                               onChange={(e) => setPendingRoles({ ...pendingRoles, [u.id]: e.target.value })}
-                              className="text-xs bg-transparent border-none focus:ring-0 py-1 pl-1.5 pr-7 cursor-pointer font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                              className="text-xs bg-transparent border-none focus:ring-0 py-1 pl-2 pr-8 cursor-pointer font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
                               style={{ color: 'inherit' }}
                             >
                               <option value="STUDENT" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Student</option>
@@ -335,13 +339,11 @@ const AdminUsers = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        u.approvalStatus === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        u.approvalStatus === 'REJECTED' ? 'bg-gray-100 text-gray-800' :
-                        u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {u.approvalStatus === 'PENDING' ? 'Pending' : u.approvalStatus === 'REJECTED' ? 'Rejected' : (u.isActive ? 'Active' : 'Inactive')}
-                      </span>
+                      {u.approvalStatus === 'PENDING' || u.approvalStatus === 'REJECTED' ? (
+                        <Badge type="approval" value={u.approvalStatus} />
+                      ) : (
+                        <Badge type="active" value={u.isActive} />
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
@@ -354,7 +356,7 @@ const AdminUsers = () => {
                         <>
                           <button 
                             onClick={() => { setResettingPasswordUser(u); setNewPassword(''); setConfirmPassword(''); setResetError(''); }}
-                            className="text-primary-600 hover:text-primary-900 transition-colors"
+                            className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
                           >
                             Reset Password
                           </button>

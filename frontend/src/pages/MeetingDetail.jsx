@@ -4,7 +4,7 @@ import { ArrowLeft, Calendar, MapPin, Clock, Edit2, ExternalLink, Plus } from 'l
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import ConfirmModal from '../components/ConfirmModal';
-import { getStatusColor, getPriorityColor } from '../utils/format';
+import Badge from '../components/Badge';
 import { useToast } from '../context/ToastContext';
 
 const MeetingDetail = () => {
@@ -330,16 +330,14 @@ const MeetingDetail = () => {
                     <div className="mt-2 flex items-center text-xs text-gray-500 dark:text-gray-400 space-x-3">
                       <span>By: {item.ticket.submitter.name}</span>
                       <span>•</span>
-                      <span className={`px-2 py-0.5 rounded-full font-medium ${getPriorityColor(item.ticket.priority)}`}>{item.ticket.priority}</span>
+                      <Badge type="priority" value={item.ticket.priority} />
                       <span>•</span>
-                      <span className={`px-2 py-0.5 rounded-full font-medium ${getStatusColor(item.ticket.status)}`}>{formatTicketStatus(item.ticket.status)}</span>
+                      <Badge type="status" value={item.ticket.status} />
                     </div>
                   </div>
                   
                   {editingItemId !== item.id && (
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(item.status)}`}>
-                      {formatTicketStatus(item.status)}
-                    </span>
+                    <Badge type="status" value={item.status} className="py-1" />
                   )}
                 </div>
 

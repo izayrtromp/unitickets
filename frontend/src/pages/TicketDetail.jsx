@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import { ArrowLeft } from 'lucide-react';
-import { getStatusColor, getPriorityColor, getFeedbackColor, getFeedbackTypeLabel, formatRelativeTime, formatLabel } from '../utils/format';
+import { formatRelativeTime, formatLabel } from '../utils/format';
+import Badge from '../components/Badge';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -295,9 +296,7 @@ const TicketDetail = () => {
                 </button>
               </>
             )}
-            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
-              {formatLabel(ticket.status)}
-            </span>
+            <Badge type="status" value={ticket.status} className="py-1" />
           </div>
         </div>
         <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0">
@@ -305,11 +304,9 @@ const TicketDetail = () => {
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
               <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Category & Priority</dt>
               <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
-                <span>{ticket.category} • <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ml-1 ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span></span>
+                <span className="flex items-center">{ticket.category} <span className="mx-2">•</span> <Badge type="priority" value={ticket.priority} /></span>
                 {ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
-                  <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${getFeedbackColor(ticket.type)}`}>
-                    {getFeedbackTypeLabel(ticket.type)}
-                  </span>
+                  <Badge type="feedback" value={ticket.type} />
                 )}
               </dd>
             </div>

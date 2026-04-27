@@ -32,7 +32,8 @@ export function getStatusColor(status) {
     case 'TODO':
     case 'PENDING':
     case 'WAITING':
-      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
+    case 'OPEN':
+      return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800';
     case 'IN_PROGRESS':
     case 'DISCUSSED':
     case 'FOLLOW_UP_REQUIRED':
@@ -41,7 +42,11 @@ export function getStatusColor(status) {
     case 'RESOLVED':
     case 'DONE':
     case 'COMPLETED':
+    case 'APPROVED':
       return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800';
+    case 'REJECTED':
+    case 'CANCELLED':
+    case 'DEACTIVATED':
     case 'OVERDUE':
       return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800';
     default:
@@ -52,12 +57,13 @@ export function getStatusColor(status) {
 export function getPriorityColor(priority) {
   switch(priority) {
     case 'URGENT':
-    case 'HIGH':
       return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800';
+    case 'HIGH':
+      return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-800';
     case 'MEDIUM':
       return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800';
     case 'LOW':
-      return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800';
+      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
     default:
       return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700';
   }
@@ -99,4 +105,18 @@ export function getRoleIcon(role) {
     case 'ADMIN': return '🛡️';
     default: return '';
   }
+}
+
+export function getApprovalColor(status) {
+  switch(status) {
+    case 'PENDING': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800';
+    case 'REJECTED': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800';
+    case 'APPROVED': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800';
+    default: return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+  }
+}
+
+export function getActiveColor(isActive) {
+  if (isActive) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800';
+  return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
 }

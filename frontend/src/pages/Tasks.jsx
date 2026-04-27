@@ -181,22 +181,27 @@ const Tasks = () => {
                       {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span className="italic text-gray-400 dark:text-gray-500">No due date</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select 
-                        value={task.status}
-                        onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                        disabled={isUpdatingStatusId === task.id}
-                        className={`text-xs rounded shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50 transition-all duration-200 cursor-pointer dark:bg-gray-800 ${getStatusColor(task.status)}`}
-                      >
-                        {isUpdatingStatusId === task.id ? (
-                          <option value={task.status}>Updating...</option>
-                        ) : (
-                          <>
-                            <option value="TODO">To Do</option>
-                            <option value="IN_PROGRESS">In Progress</option>
-                            <option value="DONE">Done</option>
-                          </>
-                        )}
-                      </select>
+                      <div className="flex items-center space-x-2">
+                        <div className={`flex items-center rounded-full focus-within:ring-2 focus-within:ring-green-500 ${getStatusColor(task.status)} transition-colors duration-200`}>
+                          <select 
+                            value={task.status}
+                            onChange={(e) => handleStatusChange(task.id, e.target.value)}
+                            disabled={isUpdatingStatusId === task.id}
+                            className="text-xs bg-transparent border-none focus:ring-0 py-1 pl-3 pr-8 cursor-pointer font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                            style={{ color: 'inherit' }}
+                          >
+                            {isUpdatingStatusId === task.id ? (
+                              <option value={task.status} className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Updating...</option>
+                            ) : (
+                              <>
+                                <option value="TODO" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">To Do</option>
+                                <option value="IN_PROGRESS" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">In Progress</option>
+                                <option value="DONE" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Done</option>
+                              </>
+                            )}
+                          </select>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       {user.role === 'ADMIN' && (

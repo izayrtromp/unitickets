@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { getStatusColor, getPriorityColor, getFeedbackColor, getFeedbackTypeLabel, formatLabel, formatRelativeTime } from '../utils/format';
+import { formatRelativeTime } from '../utils/format';
+import Badge from '../components/Badge';
 import { Ticket as TicketIcon, PlusCircle, Clock, AlertTriangle, MessageSquare, Inbox } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 
@@ -231,9 +232,7 @@ const Dashboard = () => {
                     <div className="flex flex-col space-y-1 truncate pr-4">
                       <div className="flex items-center space-x-3 truncate">
                         {t.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(t.type) && (
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${getFeedbackColor(t.type)}`}>
-                            {getFeedbackTypeLabel(t.type)}
-                          </span>
+                          <Badge type="feedback" value={t.type} />
                         )}
                         <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{t.title}</p>
                       </div>
@@ -242,14 +241,9 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex-shrink-0 flex flex-col items-end space-y-2">
-                      <p className={`px-2 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full ${getStatusColor(t.status)}`}>
-                        {formatLabel(t.status)}
-                      </p>
+                      <Badge type="status" value={t.status} />
                       <div className="flex items-center text-sm">
-                        <span className={`px-2 py-0.5 inline-flex text-xs leading-5 font-medium rounded-full ${getPriorityColor(t.priority)}`}>
-                          {t.priority === 'URGENT' && <AlertTriangle className="w-3.5 h-3.5 mr-1 inline" />}
-                          {formatLabel(t.priority)}
-                        </span>
+                        <Badge type="priority" value={t.priority} icon={t.priority === 'URGENT' ? AlertTriangle : null} />
                       </div>
                     </div>
                   </div>
