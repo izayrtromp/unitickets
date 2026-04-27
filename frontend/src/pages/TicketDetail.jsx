@@ -34,6 +34,11 @@ const TicketDetail = () => {
   const [isPostingComment, setIsPostingComment] = useState(false);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
 
+  const [showReopenModal, setShowReopenModal] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [isReopening, setIsReopening] = useState(false);
+  const [reopenError, setReopenError] = useState('');
+
   const [showAgendaModal, setShowAgendaModal] = useState(false);
   const [meetings, setMeetings] = useState([]);
   const [selectedMeeting, setSelectedMeeting] = useState('');
@@ -205,6 +210,27 @@ const TicketDetail = () => {
     setShowAgendaModal(true);
   };
 
+  const handleReopenTicket = async (e) => {
+    e.preventDefault();
+    if (!reopenReason || reopenReason.trim().length < 5 || reopenReason.trim().length > 500) {
+      setReopenError('Reason must be between 5 and 500 characters.');
+      return;
+    }
+    setIsReopening(true);
+    setReopenError('');
+    try {
+      await api.patch(`/tickets/${id}/reopen`, { reason: reopenReason });
+      addToast('Ticket reopened successfully', 'success');
+      setShowReopenModal(false);
+      fetchTicket();
+      window.dispatchEvent(new Event('refreshNotifications'));
+    } catch (err) {
+      setReopenError(err.response?.data?.error || err.response?.data?.message || 'Failed to reopen ticket');
+    } finally {
+      setIsReopening(false);
+    }
+  };
+
   const handleAddToAgenda = async (e) => {
     e.preventDefault();
     if (!selectedMeeting) {
@@ -295,6 +321,11 @@ const TicketDetail = () => {
                   Create Task
                 </button>
               </>
+            )}
+            {ticket.submitter?.id === user.id && ticket.status === 'RESOLVED' && (ticket.reopenCount || 0) < 2 && (
+              <button onClick={() => { setReopenReason(''); setReopenError(''); setShowReopenModal(true); }} className="px-3 py-1 text-xs font-medium rounded border border-red-300 bg-white text-red-600 hover:bg-red-50 dark:border-red-800 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors shadow-sm">
+                Reopen Ticket
+              </button>
             )}
             <Badge type="status" value={ticket.status} className="py-1" />
           </div>
@@ -456,6 +487,43 @@ const TicketDetail = () => {
                 <button type="button" disabled={isCreatingTask} onClick={() => setShowTaskModal(false)} className="btn-secondary transition-colors">Cancel</button>
                 <button type="submit" disabled={isCreatingTask} className="btn-primary disabled:opacity-50">
                   {isCreatingTask ? 'Creating...' : 'Create Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reopen Ticket Modal */}
+      {showReopenModal && (
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Reopen Ticket</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">You can reopen this ticket if the issue was not fully resolved. You have {2 - (ticket.reopenCount || 0)} reopen(s) remaining.</p>
+            {reopenError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{reopenError}</div>}
+            
+            <form onSubmit={handleReopenTicket} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Why are you reopening this ticket?</label>
+                <textarea 
+                  required 
+                  minLength="5" 
+                  maxLength="500"
+                  rows="4"
+                  disabled={isReopening} 
+                  value={reopenReason} 
+                  onChange={e => setReopenReason(e.target.value)} 
+                  className="input-field mt-1 w-full"
+                  placeholder="Explain why the issue is not resolved..."
+                ></textarea>
+                <div className="text-xs text-right mt-1 text-gray-500">
+                  {reopenReason.length}/500
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button type="button" disabled={isReopening} onClick={() => setShowReopenModal(false)} className="btn-secondary transition-colors">Cancel</button>
+                <button type="submit" disabled={isReopening || reopenReason.trim().length < 5} className="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50">
+                  {isReopening ? 'Reopening...' : 'Reopen Ticket'}
                 </button>
               </div>
             </form>

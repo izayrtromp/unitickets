@@ -264,6 +264,69 @@ router.put('/:id', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), asyn
   }
 });
 
+// Reopen ticket (Creator only)
+router.patch('/:id/reopen', authenticateToken, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason || reason.trim().length < 5 || reason.trim().length > 500) {
+      return res.status(400).json({ error: 'A valid reason (5-500 characters) is required to reopen.' });
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: req.params.id } });
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
+
+    if (ticket.submitterId !== req.user.id) {
+      return res.status(403).json({ error: 'Only the ticket creator can reopen this ticket.' });
+    }
+
+    if (ticket.status !== 'RESOLVED') {
+      return res.status(400).json({ error: 'Only resolved tickets can be reopened.' });
+    }
+
+    if (ticket.reopenCount >= 2) {
+      return res.status(400).json({ error: 'This ticket has reached the reopen limit.' });
+    }
+
+    if (ticket.lastReopenedAt) {
+      const timeSinceReopen = new Date() - new Date(ticket.lastReopenedAt);
+      if (timeSinceReopen < 10 * 60 * 1000) {
+        return res.status(400).json({ error: 'You must wait a few minutes before reopening this ticket again.' });
+      }
+    }
+
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: req.params.id },
+      data: {
+        status: 'OPEN',
+        reopenCount: ticket.reopenCount + 1,
+        lastReopenedAt: new Date()
+      }
+    });
+
+    const activity = await prisma.activity.create({
+      data: {
+        ticketId: ticket.id,
+        userId: req.user.id,
+        action: `reopened ticket\nReason: ${reason.trim()}`
+      }
+    });
+
+    if (ticket.assignedToId) {
+      await createNotification({
+        userId: ticket.assignedToId,
+        ticketId: ticket.id,
+        type: 'REOPENED',
+        message: `Ticket reopened: ${ticket.title}`,
+        activityId: activity.id
+      });
+    }
+
+    res.json(updatedTicket);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to reopen ticket' });
+  }
+});
+
 // Delete ticket
 router.delete('/:id', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
