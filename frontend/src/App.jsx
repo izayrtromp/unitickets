@@ -15,6 +15,7 @@ import AdminUsers from './pages/AdminUsers';
 import Tasks from './pages/Tasks';
 import Meetings from './pages/Meetings';
 import MeetingDetail from './pages/MeetingDetail';
+import ServerLoader from './components/ServerLoader';
 
 const PrivateRoute = ({ children, roles }) => {
   const { user } = useAuth();
@@ -57,6 +58,7 @@ function App() {
           <Route path="admin/users" element={<PrivateRoute roles={['ADMIN']}><AdminUsers /></PrivateRoute>} />
         </Route>
         </Routes>
+        <ServerLoader />
       </ToastProvider>
     </Router>
   );

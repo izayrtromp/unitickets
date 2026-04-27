@@ -7,11 +7,24 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  window.dispatchEvent(new CustomEvent('unitickets-api-start'));
+  
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    window.dispatchEvent(new CustomEvent('unitickets-api-end'));
+    return response;
+  },
+  (error) => {
+    window.dispatchEvent(new CustomEvent('unitickets-api-end'));
+    return Promise.reject(error);
+  }
+);
 
 export default api;
