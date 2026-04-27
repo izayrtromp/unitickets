@@ -68,6 +68,11 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/meetings', meetingRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: "ok", message: "UniTickets backend is running" });
+});
+
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
