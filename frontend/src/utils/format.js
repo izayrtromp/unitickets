@@ -145,3 +145,12 @@ export function getUpdateAccentColor(type) {
     default: return 'bg-gray-400 dark:bg-gray-500';
   }
 }
+
+export function getAuditActionColor(action) {
+  if (!action) return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+  if (action.includes('CREATED') || action.includes('REACTIVATED') || action.includes('APPROVED')) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800';
+  if (action.includes('DEACTIVATED') || action.includes('REJECTED')) return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800';
+  if (action.includes('CHANGED') || action.includes('UPDATED')) return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+  if (action.includes('PASSWORD')) return 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800';
+  return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+}

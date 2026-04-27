@@ -58,6 +58,7 @@ const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notifications');
 const taskRoutes = require('./routes/tasks');
 const meetingRoutes = require('./routes/meetings');
+const auditLogsRoutes = require('./routes/auditLogs');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
@@ -67,6 +68,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/meetings', meetingRoutes);
+app.use('/api/audit-logs', auditLogsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

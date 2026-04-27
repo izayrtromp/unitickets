@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import TicketDetail from './pages/TicketDetail';
 import AdminUsers from './pages/AdminUsers';
+import AuditLogs from './pages/AuditLogs';
 import Updates from './pages/Updates';
 import Tasks from './pages/Tasks';
 import Meetings from './pages/Meetings';
@@ -60,6 +61,7 @@ function App() {
           <Route path="meetings" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><Meetings /></PrivateRoute>} />
           <Route path="meetings/:id" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><MeetingDetail /></PrivateRoute>} />
           <Route path="admin/users" element={<PrivateRoute roles={['ADMIN']}><AdminUsers /></PrivateRoute>} />
+          <Route path="admin/audit-logs" element={<PrivateRoute roles={['ADMIN']}><AuditLogs /></PrivateRoute>} />
         </Route>
         </Routes>
         <ServerLoader />

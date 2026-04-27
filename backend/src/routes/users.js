@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { PrismaClient } = require('@prisma/client');
 const { authenticateToken, authorizeRoles } = require('../middleware/auth');
+const { logAuditAction } = require('../utils/auditLogger');
 const router = express.Router();
 const prisma = new PrismaClient();
 
@@ -73,6 +74,15 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
     });
     
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_CREATED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: { role: user.role, name: user.name, studentId: user.studentId }
+    });
+    
     res.status(201).json(user);
   } catch (error) {
     console.error(error);
@@ -113,6 +123,16 @@ router.patch('/:id/role', authenticateToken, authorizeRoles('ADMIN'), async (req
       data: { role },
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
     });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_ROLE_CHANGED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: { previousRole: targetUser.role, newRole: user.role }
+    });
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update user role' });
@@ -130,9 +150,18 @@ router.patch('/:id/password', authenticateToken, authorizeRoles('ADMIN'), async 
     
     const passwordHash = await bcrypt.hash(password, 10);
     
-    await prisma.user.update({
+    const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { passwordHash }
+    });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'PASSWORD_RESET_TRIGGERED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: {}
     });
     
     res.json({ success: true, message: 'Password reset successfully' });
@@ -167,6 +196,16 @@ router.patch('/:id/deactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
       data: { isActive: false },
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
     });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_DEACTIVATED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: {}
+    });
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to deactivate user' });
@@ -181,6 +220,16 @@ router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
       data: { isActive: true },
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
     });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_REACTIVATED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: {}
+    });
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to reactivate user' });
@@ -195,6 +244,16 @@ router.patch('/:id/approve', authenticateToken, authorizeRoles('ADMIN'), async (
       data: { approvalStatus: 'APPROVED', isActive: true },
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
     });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_REACTIVATED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: { note: 'Account approved' }
+    });
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to approve user' });
@@ -209,6 +268,16 @@ router.patch('/:id/reject', authenticateToken, authorizeRoles('ADMIN'), async (r
       data: { approvalStatus: 'REJECTED', isActive: false },
       select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
     });
+    
+    await logAuditAction({
+      actor: req.user,
+      action: 'USER_DEACTIVATED',
+      targetType: 'USER',
+      targetId: user.id,
+      targetLabel: user.email,
+      metadata: { note: 'Account request rejected' }
+    });
+    
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Failed to reject user' });

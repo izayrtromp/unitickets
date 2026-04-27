@@ -117,9 +117,14 @@ const Navbar = () => {
               </>
             )}
             {user?.role === 'ADMIN' && (
-              <Link to="/admin/users" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                Users
-              </Link>
+              <>
+                <Link to="/admin/users" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Users
+                </Link>
+                <Link to="/admin/audit-logs" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  Audit Logs
+                </Link>
+              </>
             )}
             {user && (
               <>
