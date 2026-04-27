@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
-import { formatLabel, formatRelativeTime } from '../utils/format';
+import { formatLabel, formatRelativeTime, getRoleColor, getRoleIcon } from '../utils/format';
 import { useToast } from '../context/ToastContext';
 
 const AdminUsers = () => {
@@ -303,21 +303,26 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.studentId || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {u.id === currentUser?.id ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
+                        <span className={`px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full ${getRoleColor(u.role)}`}>
+                          <span className="mr-1.5">{getRoleIcon(u.role)}</span>
                           {formatLabel(u.role)}
                         </span>
                       ) : (
                         <div className="flex items-center space-x-2">
-                          <select
-                            disabled={isSavingRoleId === u.id}
-                            value={pendingRoles[u.id] || u.role}
-                            onChange={(e) => setPendingRoles({ ...pendingRoles, [u.id]: e.target.value })}
-                            className="text-xs rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50"
-                          >
-                            <option value="STUDENT">Student</option>
-                            <option value="CLASS_REP">Class Rep</option>
-                            <option value="ADMIN">Admin</option>
-                          </select>
+                          <div className={`flex items-center rounded-full focus-within:ring-2 focus-within:ring-green-500 ${getRoleColor(pendingRoles[u.id] || u.role)} transition-colors duration-200`}>
+                            <span className="pl-2.5 text-xs select-none pointer-events-none">{getRoleIcon(pendingRoles[u.id] || u.role)}</span>
+                            <select
+                              disabled={isSavingRoleId === u.id}
+                              value={pendingRoles[u.id] || u.role}
+                              onChange={(e) => setPendingRoles({ ...pendingRoles, [u.id]: e.target.value })}
+                              className="text-xs bg-transparent border-none focus:ring-0 py-1 pl-1.5 pr-7 cursor-pointer font-semibold disabled:opacity-70 disabled:cursor-not-allowed"
+                              style={{ color: 'inherit' }}
+                            >
+                              <option value="STUDENT" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Student</option>
+                              <option value="CLASS_REP" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Class Rep</option>
+                              <option value="ADMIN" className="text-gray-900 bg-white dark:bg-gray-800 dark:text-gray-100">Admin</option>
+                            </select>
+                          </div>
                           {pendingRoles[u.id] && pendingRoles[u.id] !== u.role && (
                             <div className="flex space-x-1">
                               <button disabled={isSavingRoleId === u.id} onClick={() => handleRoleChange(u.id, pendingRoles[u.id])} className="text-green-600 hover:text-green-800 text-xs font-bold px-1 border border-green-200 rounded bg-green-50 disabled:opacity-50">

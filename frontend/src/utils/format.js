@@ -78,3 +78,25 @@ export function getFeedbackTypeLabel(type) {
   if (type === "GENERAL_FEEDBACK") return "Feedback";
   return null;
 }
+
+export function getRoleColor(role) {
+  switch(role) {
+    case 'STUDENT':
+      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+    case 'CLASS_REP':
+      return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+    case 'ADMIN':
+      return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800';
+    default:
+      return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-300 border border-gray-200 dark:border-gray-700';
+  }
+}
+
+export function getRoleIcon(role) {
+  switch(role) {
+    case 'STUDENT': return '🎓';
+    case 'CLASS_REP': return '👥';
+    case 'ADMIN': return '🛡️';
+    default: return '';
+  }
+}
