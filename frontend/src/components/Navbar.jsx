@@ -103,6 +103,9 @@ const Navbar = () => {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
+            <Link to="/updates" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Updates
+            </Link>
             {['CLASS_REP', 'ADMIN'].includes(user?.role) && (
               <>
                 <Link to="/tasks" className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">

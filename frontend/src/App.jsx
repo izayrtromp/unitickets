@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import TicketDetail from './pages/TicketDetail';
 import AdminUsers from './pages/AdminUsers';
+import Updates from './pages/Updates';
 import Tasks from './pages/Tasks';
 import Meetings from './pages/Meetings';
 import MeetingDetail from './pages/MeetingDetail';
@@ -53,6 +54,7 @@ function App() {
         
         <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
           <Route index element={<Dashboard />} />
+          <Route path="updates" element={<Updates />} />
           <Route path="tickets/:id" element={<TicketDetail />} />
           <Route path="tasks" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><Tasks /></PrivateRoute>} />
           <Route path="meetings" element={<PrivateRoute roles={['CLASS_REP', 'ADMIN']}><Meetings /></PrivateRoute>} />
