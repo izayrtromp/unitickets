@@ -16,6 +16,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isLoggingOut = false;
+
 api.interceptors.response.use(
   (response) => {
     window.dispatchEvent(new CustomEvent('unitickets-api-end'));
@@ -23,6 +25,24 @@ api.interceptors.response.use(
   },
   (error) => {
     window.dispatchEvent(new CustomEvent('unitickets-api-end'));
+
+    if (error.response && error.response.status === 401) {
+      // Prevent redirect loops and duplicate clears
+      if (!isLoggingOut && window.location.pathname !== '/login') {
+        isLoggingOut = true;
+        
+        // Clear auth data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Trigger cross-tab sync so other tabs also logout
+        localStorage.setItem('logout', Date.now().toString());
+        
+        // Redirect to login (full reload flushes all React state memory)
+        window.location.href = '/login';
+      }
+    }
+
     return Promise.reject(error);
   }
 );
