@@ -108,11 +108,11 @@ const AdminUsers = () => {
   };
 
   const handleReject = async (userId) => {
-    if (!window.confirm('Are you sure you want to reject this account request?')) return;
+    if (!window.confirm('Are you sure you want to reject and deactivate this unverified account?')) return;
     try {
       await api.patch(`/users/${userId}/reject`);
       fetchUsers();
-      addToast('User request rejected', 'success');
+      addToast('Unverified account rejected', 'success');
     } catch (err) {
       addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to reject user', 'error');
     }
@@ -165,7 +165,7 @@ const AdminUsers = () => {
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    const matchesTab = viewTab === 'PENDING' ? u.approvalStatus === 'PENDING' : u.approvalStatus !== 'PENDING';
+    const matchesTab = viewTab === 'UNVERIFIED' ? u.isEmailVerified === false : u.isEmailVerified === true;
     return matchesSearch && matchesRole && matchesTab;
   });
 
@@ -241,17 +241,24 @@ const AdminUsers = () => {
             All Users
           </button>
           <button 
-            onClick={() => setViewTab('PENDING')} 
-            className={`py-3 px-6 text-sm font-medium flex items-center transition-colors ${viewTab === 'PENDING' ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            onClick={() => setViewTab('UNVERIFIED')} 
+            className={`py-3 px-6 text-sm font-medium flex items-center transition-colors ${viewTab === 'UNVERIFIED' ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
-            Pending Approvals
-            {safeUsers.filter(u => u.approvalStatus === 'PENDING').length > 0 && (
+            Unverified Accounts
+            {safeUsers.filter(u => u.isEmailVerified === false).length > 0 && (
               <span className="ml-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-0.5 px-2 rounded-full text-xs">
-                {safeUsers.filter(u => u.approvalStatus === 'PENDING').length}
+                {safeUsers.filter(u => u.isEmailVerified === false).length}
               </span>
             )}
           </button>
         </div>
+        
+        {viewTab === 'UNVERIFIED' && (
+          <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-100 dark:border-yellow-800/30 text-sm text-yellow-800 dark:text-yellow-300">
+            These users registered but have not verified their institutional email yet. They cannot access the app until they verify their email.
+          </div>
+        )}
+        
         <div className="p-4 mb-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
           <input
             type="text"
@@ -339,18 +346,18 @@ const AdminUsers = () => {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {u.approvalStatus === 'PENDING' || u.approvalStatus === 'REJECTED' ? (
-                        <Badge type="approval" value={u.approvalStatus} />
+                      {u.isEmailVerified === false ? (
+                        <span className="px-2.5 py-0.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800">
+                          Unverified
+                        </span>
                       ) : (
                         <Badge type="active" value={u.isActive} />
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(u.createdAt)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                      {u.approvalStatus === 'PENDING' ? (
+                      {u.isEmailVerified === false ? (
                         <>
-                          <button onClick={() => handleApprove(u.id)} className="text-green-600 hover:text-green-900 transition-colors">Approve</button>
-                          <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900 transition-colors">Reject</button>
+                          <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900 transition-colors">Reject / Delete</button>
                         </>
                       ) : (
                         <>

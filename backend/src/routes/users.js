@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 router.get('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
     const users = await prisma.user.findMany({
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, createdAt: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true, createdAt: true },
       orderBy: { createdAt: 'desc' }
     });
     res.json(users);
@@ -24,7 +24,7 @@ router.get('/staff', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), as
   try {
     const users = await prisma.user.findMany({
       where: { role: { in: ['CLASS_REP', 'ADMIN'] }, isActive: true },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true },
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, isEmailVerified: true, createdAt: true },
       orderBy: { name: 'asc' }
     });
     res.json(users);
@@ -71,7 +71,7 @@ router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) =>
     
     const user = await prisma.user.create({
       data: { name: name.trim(), email: email.trim(), studentId: studentId ? studentId.trim() : null, passwordHash, role },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true, createdAt: true }
     });
     
     await logAuditAction({
@@ -121,7 +121,7 @@ router.patch('/:id/role', authenticateToken, authorizeRoles('ADMIN'), async (req
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { role },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, createdAt: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true, createdAt: true }
     });
     
     await logAuditAction({
@@ -194,7 +194,7 @@ router.patch('/:id/deactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { isActive: false },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true }
     });
     
     await logAuditAction({
@@ -218,7 +218,7 @@ router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { isActive: true },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true }
     });
     
     await logAuditAction({
@@ -239,10 +239,17 @@ router.patch('/:id/reactivate', authenticateToken, authorizeRoles('ADMIN'), asyn
 // Approve user (Admin only)
 router.patch('/:id/approve', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
+    const targetUser = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!targetUser) return res.status(404).json({ error: 'User not found' });
+    
+    if (!targetUser.isEmailVerified) {
+      return res.status(400).json({ error: 'Cannot approve user. Email is not verified.' });
+    }
+
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { approvalStatus: 'APPROVED', isActive: true },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true }
     });
     
     await logAuditAction({
@@ -266,7 +273,7 @@ router.patch('/:id/reject', authenticateToken, authorizeRoles('ADMIN'), async (r
     const user = await prisma.user.update({
       where: { id: req.params.id },
       data: { approvalStatus: 'REJECTED', isActive: false },
-      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true }
+      select: { id: true, name: true, email: true, studentId: true, role: true, isActive: true, approvalStatus: true, isEmailVerified: true }
     });
     
     await logAuditAction({
