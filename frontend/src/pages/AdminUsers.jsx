@@ -17,6 +17,8 @@ const AdminUsers = () => {
   const [studentId, setStudentId] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('STUDENT');
+  const [touched, setTouched] = useState({ studentId: false, password: false });
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const [createError, setCreateError] = useState('');
   const [createSuccess, setCreateSuccess] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -54,14 +56,13 @@ const AdminUsers = () => {
     e.preventDefault();
     setCreateError('');
     setCreateSuccess('');
+    setIsSubmitted(true);
     
     if (password && password.length < 6) {
-      // Handled by inline validation, but prevent submit
       return;
     }
     
     if (role === 'STUDENT' && !studentId.trim()) {
-      // Handled by inline validation, but prevent submit
       return;
     }
 
@@ -74,6 +75,8 @@ const AdminUsers = () => {
       setStudentId('');
       setPassword('');
       setRole('STUDENT');
+      setTouched({ studentId: false, password: false });
+      setIsSubmitted(false);
       fetchUsers();
     } catch (err) {
       setCreateError(err.response?.data?.message || err.response?.data?.error || 'Failed to create user.');
@@ -197,15 +200,15 @@ const AdminUsers = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Student ID</label>
-              <input type="text" disabled={isCreating} value={studentId} onChange={(e) => setStudentId(e.target.value)} className={`input-field mt-1 w-full ${role === 'STUDENT' && !studentId.trim() ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
-              {role === 'STUDENT' && !studentId.trim() && (
+              <input type="text" disabled={isCreating} value={studentId} onChange={(e) => setStudentId(e.target.value)} onBlur={() => setTouched({ ...touched, studentId: true })} className={`input-field mt-1 w-full ${(touched.studentId || isSubmitted) && role === 'STUDENT' && !studentId.trim() ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
+              {(touched.studentId || isSubmitted) && role === 'STUDENT' && !studentId.trim() && (
                 <p className="mt-1 text-xs text-red-500 dark:text-red-400">Student ID is required.</p>
               )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
-              <input type="password" required minLength="6" disabled={isCreating} value={password} onChange={(e) => setPassword(e.target.value)} className={`input-field mt-1 w-full ${password.length > 0 && password.length < 6 ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} />
-              {password.length > 0 && password.length < 6 && (
+              <input type="password" required disabled={isCreating} value={password} onChange={(e) => setPassword(e.target.value)} onBlur={() => setTouched({ ...touched, password: true })} className={`input-field mt-1 w-full ${(touched.password || isSubmitted) && password.length > 0 && password.length < 6 ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} />
+              {(touched.password || isSubmitted) && password.length > 0 && password.length < 6 && (
                 <p className="mt-1 text-xs text-red-500 dark:text-red-400">Must be at least 6 characters.</p>
               )}
             </div>
