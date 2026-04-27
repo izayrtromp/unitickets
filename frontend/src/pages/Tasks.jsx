@@ -103,15 +103,15 @@ const Tasks = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Task Management</h2>
-          <p className="mt-1 text-sm text-gray-500">Track follow-up actions and responsibilities.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Task Management</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track follow-up actions and responsibilities.</p>
         </div>
         
-        <div className="flex bg-white rounded-md shadow-sm border border-gray-300 p-1">
+        <div className="flex bg-white dark:bg-gray-800 rounded-md shadow-sm border border-gray-300 dark:border-gray-700 p-1 transition-colors">
           <select 
             value={filter} 
             onChange={e => setFilter(e.target.value)}
-            className="input-field border-none shadow-none py-1.5 focus:ring-0"
+            className="input-field border-none shadow-none py-1.5 focus:ring-0 dark:bg-gray-800 dark:text-white"
           >
             <option value="ASSIGNED_TO_ME">Assigned to me</option>
             <option value="ALL">All Tasks</option>
@@ -124,68 +124,68 @@ const Tasks = () => {
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg transition-colors">
         {loading ? (
           <div className="animate-pulse p-6 flex flex-col space-y-6">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="flex space-x-4">
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
               </div>
             ))}
           </div>
         ) : filteredTasks.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center">
-            <ClipboardList className="h-12 w-12 text-gray-400 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">No tasks found</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <ClipboardList className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No tasks found</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {filter === 'ALL' ? 'No tasks assigned yet.' : 'No tasks match your current filter.'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked Ticket</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Task</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Linked Ticket</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assigned To</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Due Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredTasks.map(task => (
-                  <tr key={task.id} className={`${task.status === 'DONE' ? 'opacity-75 bg-gray-50' : ''} hover:bg-gray-50 transition-all duration-200`}>
+                  <tr key={task.id} className={`${task.status === 'DONE' ? 'opacity-75 bg-gray-50 dark:bg-gray-800/50' : ''} hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200`}>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {isOverdue(task) && <span className="h-2 w-2 rounded-full bg-red-500 mr-2" title="Overdue"></span>}
-                        <div className="text-sm font-medium text-gray-900">{task.title}</div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">{task.title}</div>
                       </div>
-                      {task.description && <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">{task.description}</div>}
+                      {task.description && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate max-w-xs">{task.description}</div>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                       {task.ticket ? (
-                        <Link to={`/tickets/${task.ticket.id}`} className="text-primary-600 hover:text-primary-900 hover:underline">
+                        <Link to={`/tickets/${task.ticket.id}`} className="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300 hover:underline">
                           {task.ticket.title}
                         </Link>
-                      ) : <span className="italic text-gray-400">No ticket linked</span>}
+                      ) : <span className="italic text-gray-400 dark:text-gray-500">No ticket linked</span>}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
                       {task.assignedTo?.name || '-'}
                     </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${isOverdue(task) ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span className="italic text-gray-400">No due date</span>}
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${isOverdue(task) ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : <span className="italic text-gray-400 dark:text-gray-500">No due date</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <select 
                         value={task.status}
                         onChange={(e) => handleStatusChange(task.id, e.target.value)}
                         disabled={isUpdatingStatusId === task.id}
-                        className={`text-xs rounded shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50 transition-all duration-200 cursor-pointer ${getStatusColor(task.status)}`}
+                        className={`text-xs rounded shadow-sm focus:border-primary-500 focus:ring-primary-500 py-1 pl-2 pr-6 disabled:opacity-50 transition-all duration-200 cursor-pointer dark:bg-gray-800 ${getStatusColor(task.status)}`}
                       >
                         {isUpdatingStatusId === task.id ? (
                           <option value={task.status}>Updating...</option>

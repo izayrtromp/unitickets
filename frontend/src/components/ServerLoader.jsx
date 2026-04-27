@@ -84,18 +84,18 @@ const ServerLoader = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white bg-opacity-80 backdrop-blur-sm transition-opacity duration-300">
-      <div className="flex flex-col items-center max-w-sm px-6 py-8 bg-white rounded-xl shadow-xl border border-gray-100 text-center">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white dark:bg-gray-900 bg-opacity-80 dark:bg-opacity-80 backdrop-blur-sm transition-opacity duration-300">
+      <div className="flex flex-col items-center max-w-sm px-6 py-8 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 text-center transition-colors">
         <div className="mb-6">
-          <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-primary-100 dark:border-gray-700 border-t-primary-600 dark:border-t-primary-500 rounded-full animate-spin"></div>
         </div>
         
-        <h3 className="text-lg font-bold text-gray-900 mb-2">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
           {primary}
         </h3>
         
         {secondary && (
-          <p className="text-sm text-gray-500 mb-0">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-0">
             {secondary}
           </p>
         )}
@@ -103,7 +103,7 @@ const ServerLoader = () => {
         {stage >= 4 && (
           <button 
             onClick={handleRetry}
-            className="mt-6 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            className="mt-6 btn-primary"
           >
             Refresh Page
           </button>

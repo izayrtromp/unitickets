@@ -130,8 +130,8 @@ const Meetings = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Class Rep Meetings</h2>
-          <p className="mt-1 text-sm text-gray-500">Manage meeting agendas and track discussion outcomes.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Class Rep Meetings</h2>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage meeting agendas and track discussion outcomes.</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -143,23 +143,23 @@ const Meetings = () => {
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
 
-      <div className="bg-white shadow sm:rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex gap-2">
+      <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg overflow-hidden transition-colors">
+        <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex gap-2">
           <button
             onClick={() => setFilter('upcoming')}
-            className={`px-3 py-1 text-sm font-medium rounded-md ${filter === 'upcoming' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'upcoming' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
             Upcoming
           </button>
           <button
             onClick={() => setFilter('past')}
-            className={`px-3 py-1 text-sm font-medium rounded-md ${filter === 'past' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'past' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
             Past
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1 text-sm font-medium rounded-md ${filter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${filter === 'all' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
             All
           </button>
@@ -168,37 +168,37 @@ const Meetings = () => {
         {loading ? (
           <div className="animate-pulse p-6 space-y-4">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-16 bg-gray-100 rounded"></div>
+              <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
         ) : filteredMeetings.length === 0 ? (
           <div className="p-12 text-center flex flex-col items-center justify-center">
-            <CalendarX2 className="h-12 w-12 text-gray-400 mb-3" />
-            <h3 className="text-lg font-medium text-gray-900">No meetings scheduled</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <CalendarX2 className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">No meetings scheduled</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {filter === 'all' ? 'Schedule a new meeting to get started.' : `No ${filter} meetings match your current filter.`}
             </p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-200">
+          <ul className="divide-y divide-gray-200 dark:divide-gray-700">
             {filteredMeetings.map(meeting => (
-              <li key={meeting.id} className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer">
+              <li key={meeting.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer">
                 <div className="px-4 py-4 sm:px-6 flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <Link to={`/meetings/${meeting.id}`} className="block focus:outline-none">
-                      <p className="text-sm font-medium text-primary-600 truncate">{meeting.title}</p>
-                      <div className="mt-2 flex items-center text-sm text-gray-500 space-x-4">
+                      <p className="text-sm font-medium text-primary-600 dark:text-primary-400 truncate">{meeting.title}</p>
+                      <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400 space-x-4">
                         <span className="flex items-center">
-                          <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                          <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
                           {new Date(meeting.meetingDate).toLocaleDateString()}
                         </span>
                         <span className="flex items-center">
-                          <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                          <Clock className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
                           {new Date(meeting.meetingDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                         {meeting.location && (
                           <span className="flex items-center">
-                            <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
+                            <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
                             {meeting.location}
                           </span>
                         )}
@@ -207,7 +207,7 @@ const Meetings = () => {
                             <span>
                               {meeting.agendaItems?.length} items 
                               {getStats(meeting.agendaItems) && (
-                                <span className="text-xs ml-1 text-gray-400">
+                                <span className="text-xs ml-1 text-gray-400 dark:text-gray-500">
                                   ({getStats(meeting.agendaItems).pending} pending)
                                 </span>
                               )}
@@ -225,7 +225,7 @@ const Meetings = () => {
                       <button
                         onClick={() => confirmDelete(meeting.id)}
                         disabled={deletingId === meeting.id}
-                        className="text-red-500 hover:text-red-700 disabled:opacity-50 p-2 rounded hover:bg-red-50"
+                        className="text-red-500 hover:text-red-700 dark:hover:text-red-400 disabled:opacity-50 p-2 rounded hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
                         title="Delete Meeting"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -251,13 +251,13 @@ const Meetings = () => {
       />
 
       {showCreateModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Schedule Meeting</h3>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Schedule Meeting</h3>
             
             <form onSubmit={handleCreateMeeting} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Meeting Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Meeting Title</label>
                 <input
                   type="text"
                   required
@@ -271,7 +271,7 @@ const Meetings = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
                   <input
                     type="date"
                     required
@@ -282,7 +282,7 @@ const Meetings = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Time</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Time</label>
                   <input
                     type="time"
                     required
@@ -295,7 +295,7 @@ const Meetings = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700">Location (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Location (Optional)</label>
                 <input
                   type="text"
                   disabled={isCreating}
@@ -307,7 +307,7 @@ const Meetings = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">General Notes (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">General Notes (Optional)</label>
                 <textarea
                   rows="2"
                   disabled={isCreating}
@@ -323,7 +323,7 @@ const Meetings = () => {
                   type="button"
                   disabled={isCreating}
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50"
+                  className="btn-secondary"
                 >
                   Cancel
                 </button>

@@ -230,13 +230,13 @@ const TicketDetail = () => {
 
   if (loading) return (
     <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
-      <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg p-6 space-y-4">
-        <div className="h-6 bg-gray-200 rounded w-1/2"></div>
-        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-        <div className="border-t border-gray-200 pt-4 space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg p-6 space-y-4">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
         </div>
       </div>
     </div>
@@ -267,11 +267,11 @@ const TicketDetail = () => {
         <ArrowLeft className="w-4 h-4 mr-1" /> Back to Dashboard
       </button>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg" id="section-details">
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg transition-colors" id="section-details">
         <div className="px-4 py-5 sm:px-6 flex justify-between items-start">
           <div>
-            <h3 className="text-xl leading-6 font-medium text-gray-900">{ticket.title}</h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500 flex items-center">
+            <h3 className="text-xl leading-6 font-medium text-gray-900 dark:text-white">{ticket.title}</h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400 flex items-center">
               Submitted by {ticket.submitter.name} • Updated {formatRelativeTime(ticket.updatedAt)}
               {(!['RESOLVED', 'CLOSED'].includes(ticket.status) && Math.floor((new Date() - new Date(ticket.updatedAt)) / (1000 * 60 * 60 * 24)) >= 7) && (
                 <span className="ml-2 text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded border border-red-100 flex items-center">
@@ -286,11 +286,11 @@ const TicketDetail = () => {
                 <button 
                   onClick={openAgendaModal} 
                   disabled={ticket.agendaItems?.length > 0}
-                  className={`px-3 py-1 text-xs font-medium rounded border ${ticket.agendaItems?.length > 0 ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm'}`}
+                  className={`px-3 py-1 text-xs font-medium rounded border transition-colors ${ticket.agendaItems?.length > 0 ? 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm'}`}
                 >
                   {ticket.agendaItems?.length > 0 ? 'Added to Agenda' : 'Add to Agenda'}
                 </button>
-                <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 shadow-sm">
+                <button onClick={openTaskModal} className="px-3 py-1 text-xs font-medium rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-sm transition-colors">
                   Create Task
                 </button>
               </>
@@ -300,11 +300,11 @@ const TicketDetail = () => {
             </span>
           </div>
         </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
-          <dl className="sm:divide-y sm:divide-gray-200">
+        <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-5 sm:p-0">
+          <dl className="sm:divide-y sm:divide-gray-200 dark:sm:divide-gray-700">
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Category & Priority</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Category & Priority</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 flex items-center space-x-2 flex-wrap gap-y-2">
                 <span>{ticket.category} • <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ml-1 ${getPriorityColor(ticket.priority)}`}>{ticket.priority}</span></span>
                 {ticket.category === 'Feedback' && ['BUG', 'FEATURE_REQUEST', 'GENERAL_FEEDBACK'].includes(ticket.type) && (
                   <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider ${getFeedbackColor(ticket.type)}`}>
@@ -314,8 +314,8 @@ const TicketDetail = () => {
               </dd>
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Assigned To</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 flex items-center justify-between">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Assigned To</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 flex items-center justify-between">
                 <span>{ticket.assignedTo ? ticket.assignedTo.name : 'Unassigned'}</span>
                 {['CLASS_REP', 'ADMIN'].includes(user.role) && (
                   <div className="flex items-center space-x-2">
@@ -344,17 +344,17 @@ const TicketDetail = () => {
               </dd>
             </div>
             <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-              <dt className="text-sm font-medium text-gray-500">Description</dt>
-              <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 whitespace-pre-wrap">
+              <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">Description</dt>
+              <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 whitespace-pre-wrap">
                 {ticket.description}
               </dd>
             </div>
             
             {/* Action Bar for Reps/Admins */}
             {['CLASS_REP', 'ADMIN'].includes(user.role) && (
-              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50">
-                <dt className="text-sm font-medium text-gray-500 flex items-center">Update Status</dt>
-                <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 space-x-2">
+              <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50 dark:bg-gray-900/50 transition-colors">
+                <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center">Update Status</dt>
+                <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:mt-0 sm:col-span-2 space-x-2">
                   {['NEW', 'IN_PROGRESS', 'WAITING', 'RESOLVED', 'CLOSED'].map(status => {
                     const isCurrent = ticket.status === status;
                     const isValidNext = validNextStatuses.includes(status);
@@ -366,7 +366,7 @@ const TicketDetail = () => {
                         key={status}
                         onClick={() => handleStatusChange(status)}
                         disabled={isCurrent || isUpdatingStatus}
-                        className={`px-3 py-1 text-xs rounded border disabled:opacity-50 ${isCurrent ? 'bg-gray-100 text-gray-800 cursor-default border-gray-300 font-semibold' : 'bg-white text-gray-700 hover:bg-gray-50 border-gray-300 shadow-sm'}`}
+                        className={`px-3 py-1 text-xs rounded border transition-colors disabled:opacity-50 ${isCurrent ? 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 cursor-default border-gray-300 dark:border-gray-600 font-semibold' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600 shadow-sm'}`}
                       >
                         {isUpdatingStatus && !isCurrent ? 'Updating...' : (ticket.status === 'CLOSED' && status === 'IN_PROGRESS' ? 'Reopen Ticket' : status.replace('_', ' '))}
                       </button>
@@ -379,26 +379,26 @@ const TicketDetail = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg" id="section-activity">
-        <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-          <h3 className="text-lg leading-6 font-medium text-gray-900">Activity & Comments</h3>
+      <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg transition-colors" id="section-activity">
+        <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white">Activity & Comments</h3>
         </div>
-        <div className="px-4 py-5 sm:p-6 text-sm text-gray-700 space-y-4">
+        <div className="px-4 py-5 sm:p-6 text-sm text-gray-700 dark:text-gray-300 space-y-4">
           {timeline.length === 0 ? (
-            <p className="text-gray-500 italic">No activity yet. Be the first to comment.</p>
+            <p className="text-gray-500 dark:text-gray-400 italic">No activity yet. Be the first to comment.</p>
           ) : (
             timeline.map(item => (
               item.type === 'activity' ? (
-                <div id={`activity-${item.id}`} key={`act-${item.id}`} className="text-xs text-gray-500 flex items-center space-x-2 px-2 py-1 rounded transition-colors duration-500">
-                  <span className="font-medium text-gray-700">{item.user?.name || 'Unknown'}</span>
+                <div id={`activity-${item.id}`} key={`act-${item.id}`} className="text-xs text-gray-500 dark:text-gray-400 flex items-center space-x-2 px-2 py-1 rounded transition-colors duration-500">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">{item.user?.name || 'Unknown'}</span>
                   <span>{item.action.replace(/NEW|IN_PROGRESS|WAITING|RESOLVED|CLOSED/g, match => formatLabel(match))}</span>
-                  <span className="text-gray-400">• {formatRelativeTime(item.createdAt)}</span>
+                  <span className="text-gray-400 dark:text-gray-500">• {formatRelativeTime(item.createdAt)}</span>
                 </div>
               ) : (
-                <div id={`comment-${item.id}`} key={`com-${item.id}`} className={`p-4 rounded-lg bg-gray-50 border border-gray-100 transition-colors duration-500`}>
+                <div id={`comment-${item.id}`} key={`com-${item.id}`} className={`p-4 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 transition-colors duration-500`}>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-semibold text-gray-900">{item.user?.name || 'Unknown'} <span className="text-xs text-gray-500 font-normal ml-1">({formatLabel(item.user?.role || '')})</span></span>
-                    <span className="text-xs text-gray-500">{formatRelativeTime(item.createdAt)}</span>
+                    <span className="font-semibold text-gray-900 dark:text-white">{item.user?.name || 'Unknown'} <span className="text-xs text-gray-500 dark:text-gray-400 font-normal ml-1">({formatLabel(item.user?.role || '')})</span></span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{formatRelativeTime(item.createdAt)}</span>
                   </div>
                   <p className="whitespace-pre-wrap">{item.content}</p>
                 </div>
@@ -406,7 +406,7 @@ const TicketDetail = () => {
             ))
           )}
         </div>
-        <div className="bg-gray-50 px-4 py-4 sm:px-6 border-t border-gray-200" id="section-comments">
+        <div className="bg-gray-50 dark:bg-gray-900/50 px-4 py-4 sm:px-6 border-t border-gray-200 dark:border-gray-700 transition-colors" id="section-comments">
           <form onSubmit={submitComment} className="flex flex-col space-y-3">
             <textarea
               rows="3"
@@ -427,23 +427,23 @@ const TicketDetail = () => {
 
       {/* Task Modal */}
       {showTaskModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Create Task from Ticket</h3>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Create Task from Ticket</h3>
             {taskError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{taskError}</div>}
             {taskSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{taskSuccess}</div>}
             
             <form onSubmit={handleCreateTask} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Task Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Task Title</label>
                 <input type="text" required disabled={isCreatingTask} value={taskTitle} onChange={e => setTaskTitle(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                 <textarea rows="3" disabled={isCreatingTask} value={taskDesc} onChange={e => setTaskDesc(e.target.value)} className="input-field mt-1 w-full"></textarea>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Assign To</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Assign To</label>
                 <select required disabled={isCreatingTask} value={taskAssignee} onChange={e => setTaskAssignee(e.target.value)} className="input-field mt-1 w-full">
                   <option value="">Select Assignee...</option>
                   {users.filter(u => ['CLASS_REP', 'ADMIN'].includes(u.role)).map(u => (
@@ -452,11 +452,11 @@ const TicketDetail = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Due Date (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Due Date (Optional)</label>
                 <input type="date" disabled={isCreatingTask} value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" disabled={isCreatingTask} onClick={() => setShowTaskModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button type="button" disabled={isCreatingTask} onClick={() => setShowTaskModal(false)} className="btn-secondary transition-colors">Cancel</button>
                 <button type="submit" disabled={isCreatingTask} className="btn-primary disabled:opacity-50">
                   {isCreatingTask ? 'Creating...' : 'Create Task'}
                 </button>
@@ -468,15 +468,15 @@ const TicketDetail = () => {
 
       {/* Agenda Modal */}
       {showAgendaModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Add to Meeting Agenda</h3>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Add to Meeting Agenda</h3>
             {agendaError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{agendaError}</div>}
             {agendaSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{agendaSuccess}</div>}
             
             <form onSubmit={handleAddToAgenda} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Select Upcoming Meeting</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Upcoming Meeting</label>
                 {meetings.length === 0 ? (
                   <p className="text-sm text-gray-500 mt-2">No upcoming meetings available. Create one from the Meetings page.</p>
                 ) : (
@@ -497,7 +497,7 @@ const TicketDetail = () => {
                 )}
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" disabled={isAddingToAgenda} onClick={() => setShowAgendaModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50">Cancel</button>
+                <button type="button" disabled={isAddingToAgenda} onClick={() => setShowAgendaModal(false)} className="btn-secondary transition-colors">Cancel</button>
                 <button type="submit" disabled={isAddingToAgenda || meetings.length === 0} className="btn-primary disabled:opacity-50">
                   {isAddingToAgenda ? 'Adding...' : 'Add to Agenda'}
                 </button>

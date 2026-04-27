@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -39,6 +40,7 @@ function App() {
   if (loading) return <FullScreenLoader />;
 
   return (
+    <ThemeProvider>
     <Router>
       <ToastProvider>
         <Routes>
@@ -61,6 +63,7 @@ function App() {
         <ServerLoader />
       </ToastProvider>
     </Router>
+    </ThemeProvider>
   );
 }
 

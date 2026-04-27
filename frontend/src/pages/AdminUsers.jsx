@@ -175,35 +175,35 @@ const AdminUsers = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-        <p className="mt-1 text-sm text-gray-500">Manage all users in the system. Only administrators have access to this area.</p>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">User Management</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage all users in the system. Only administrators have access to this area.</p>
       </div>
 
-      <div className="bg-white shadow sm:rounded-lg">
+      <div className="bg-white dark:bg-gray-800 shadow sm:rounded-lg transition-colors">
         <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Create New User</h3>
+          <h3 className="text-lg leading-6 font-medium text-gray-900 dark:text-white mb-4">Create New User</h3>
           {createError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{createError}</div>}
           {createSuccess && <div className="mb-4 text-sm text-green-600 bg-green-50 p-3 rounded">{createSuccess}</div>}
           
           <form onSubmit={handleCreateUser} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6 items-end">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
               <input type="text" required disabled={isCreating} value={name} onChange={(e) => setName(e.target.value)} className="input-field mt-1 w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
               <input type="email" required disabled={isCreating} value={email} onChange={(e) => setEmail(e.target.value)} className="input-field mt-1 w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Student ID</label>
-              <input type="text" disabled={isCreating} value={studentId} onChange={(e) => setStudentId(e.target.value)} className={`input-field mt-1 w-full ${role === 'STUDENT' && !studentId.trim() ? 'border-red-300 ring-1 ring-red-300' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Student ID</label>
+              <input type="text" disabled={isCreating} value={studentId} onChange={(e) => setStudentId(e.target.value)} className={`input-field mt-1 w-full ${role === 'STUDENT' && !studentId.trim() ? 'border-red-300 dark:border-red-500 ring-1 ring-red-300 dark:ring-red-500' : ''}`} placeholder={role === 'STUDENT' ? 'Required' : 'Optional'} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
               <input type="password" required minLength="6" disabled={isCreating} value={password} onChange={(e) => setPassword(e.target.value)} className="input-field mt-1 w-full" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Role</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Role</label>
               <select value={role} disabled={isCreating} onChange={(e) => setRole(e.target.value)} className="input-field mt-1 w-full h-[42px]">
                 <option value="STUDENT">Student</option>
                 <option value="CLASS_REP">Class Rep</option>
@@ -225,27 +225,27 @@ const AdminUsers = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div className="flex border-b border-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg transition-colors">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button 
             onClick={() => setViewTab('ALL')} 
-            className={`py-3 px-6 text-sm font-medium ${viewTab === 'ALL' ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`py-3 px-6 text-sm font-medium transition-colors ${viewTab === 'ALL' ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
             All Users
           </button>
           <button 
             onClick={() => setViewTab('PENDING')} 
-            className={`py-3 px-6 text-sm font-medium flex items-center ${viewTab === 'PENDING' ? 'border-b-2 border-primary-600 text-primary-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`py-3 px-6 text-sm font-medium flex items-center transition-colors ${viewTab === 'PENDING' ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400 dark:border-primary-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
           >
             Pending Approvals
             {safeUsers.filter(u => u.approvalStatus === 'PENDING').length > 0 && (
-              <span className="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs">
+              <span className="ml-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 py-0.5 px-2 rounded-full text-xs">
                 {safeUsers.filter(u => u.approvalStatus === 'PENDING').length}
               </span>
             )}
           </button>
         </div>
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
           <input
             type="text"
             placeholder="Search by name or email..."
@@ -283,27 +283,27 @@ const AdminUsers = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+              <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Student ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredUsers.map((u) => (
-                  <tr key={u.id} className={`${!u.isActive ? "bg-gray-50 opacity-75" : ""} hover:bg-gray-50 transition-colors duration-150`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.studentId || '-'}</td>
+                  <tr key={u.id} className={`${!u.isActive ? "bg-gray-50 dark:bg-gray-800/50 opacity-75" : ""} hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{u.name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{u.studentId || '-'}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {u.id === currentUser?.id ? (
-                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                           {formatLabel(u.role)}
                         </span>
                       ) : (
@@ -377,21 +377,21 @@ const AdminUsers = () => {
 
       {/* Password Reset Modal */}
       {resettingPasswordUser && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Reset Password for {resettingPasswordUser.name}</h3>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Reset Password for {resettingPasswordUser.name}</h3>
             {resetError && <div className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded">{resetError}</div>}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
                 <input type="password" disabled={isResettingPwd} value={newPassword} onChange={e => setNewPassword(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
                 <input type="password" disabled={isResettingPwd} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="input-field mt-1 w-full" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
-                <button disabled={isResettingPwd} onClick={() => setResettingPasswordUser(null)} className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 transition-all duration-200">Cancel</button>
+                <button disabled={isResettingPwd} onClick={() => setResettingPasswordUser(null)} className="btn-secondary transition-all duration-200">Cancel</button>
                 <button disabled={isResettingPwd} onClick={submitPasswordReset} className="btn-primary disabled:opacity-50 transition-all duration-200 flex items-center justify-center">
                   {isResettingPwd && (
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

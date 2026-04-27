@@ -57,20 +57,20 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
 
   return (
     <div 
-      className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget && !isSubmitting && !success) onClose();
       }}
     >
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6 transition-colors">
         <div className="flex justify-between items-start mb-4">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">Report Issue / Feedback</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white">Report Issue / Feedback</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               Use this to report bugs, suggest improvements, or share feedback about UniTickets.
             </p>
           </div>
-          <button onClick={onClose} disabled={isSubmitting || success} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} disabled={isSubmitting || success} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -80,7 +80,7 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
@@ -94,7 +94,7 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
             <input
               type="text"
               required
@@ -107,7 +107,7 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700">Description</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
             <textarea
               required
               rows="4"
@@ -124,7 +124,7 @@ const ReportIssueModal = ({ isOpen, onClose }) => {
               type="button"
               disabled={isSubmitting || success}
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded shadow-sm hover:bg-gray-50 focus:outline-none"
+              className="btn-secondary transition-colors"
             >
               Cancel
             </button>

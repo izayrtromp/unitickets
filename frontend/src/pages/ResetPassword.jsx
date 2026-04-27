@@ -45,24 +45,24 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 transition-opacity duration-700 ease-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-lg p-8">
+    <div className={`min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 transition-opacity duration-700 ease-out transition-colors ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 w-full max-w-md rounded-2xl shadow-lg p-8 transition-colors">
         
         <div className="flex flex-col items-center mb-6">
-          <div className="bg-primary-50 p-3 rounded-full mb-4">
-            <Ticket className="h-10 w-10 text-primary-600" />
+          <div className="bg-primary-50 dark:bg-primary-900/30 p-3 rounded-full mb-4 transition-colors">
+            <Ticket className="h-10 w-10 text-primary-600 dark:text-primary-400" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight text-center">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight text-center">
             Reset Password
           </h2>
-          <p className="mt-3 text-center text-sm text-gray-500 leading-relaxed">
+          <p className="mt-3 text-center text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
             Enter your new password below.
           </p>
         </div>
 
         {message ? (
           <div className="text-center space-y-6">
-            <div className="bg-green-50 text-green-700 p-4 rounded-lg border border-green-100">
+            <div className="bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 p-4 rounded-lg border border-green-100 dark:border-green-800 transition-colors">
               {message}
             </div>
             <Link to="/login" className="btn-primary w-full block py-2.5 rounded-lg text-sm font-semibold text-center">
@@ -72,13 +72,13 @@ const ResetPassword = () => {
         ) : (
           <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 text-center">
+              <div className="bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg border border-red-100 dark:border-red-800 text-center transition-colors">
                 {error}
               </div>
             )}
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">New Password</label>
               <input
                 type="password"
                 required
@@ -91,7 +91,7 @@ const ResetPassword = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Confirm New Password</label>
               <input
                 type="password"
                 required

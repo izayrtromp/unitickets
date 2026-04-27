@@ -111,30 +111,30 @@ const Dashboard = () => {
       <div className="flex justify-between items-center mt-8">
         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
           <div className="flex items-center space-x-3">
-            <h2 className="text-2xl font-bold text-gray-900">Recent Tickets</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Recent Tickets</h2>
             {hasFilters && (
-              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full flex items-center">
+              <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full flex items-center">
                 {filterPriority === 'URGENT' ? 'Urgent priority selected' : 'Filtered results'}
                 <button onClick={resetFilters} className="ml-2 text-primary-600 hover:text-primary-800 font-medium">Reset</button>
               </span>
             )}
           </div>
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-md self-start">
+          <div className="flex space-x-1 bg-gray-100 dark:bg-gray-800 p-1 rounded-md self-start">
             <button 
               onClick={() => setQuickFilter('open')} 
-              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'open' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'open' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
             >
               Open
             </button>
             <button 
               onClick={() => setQuickFilter('closed')} 
-              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'closed' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'closed' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
             >
               Closed
             </button>
             <button 
               onClick={() => setQuickFilter('all')} 
-              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'all' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`px-3 py-1 text-sm font-medium rounded-md ${quickFilter === 'all' ? 'bg-white dark:bg-gray-700 shadow-sm text-gray-900 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'}`}
             >
               All
             </button>
@@ -146,7 +146,7 @@ const Dashboard = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-md shadow flex flex-col md:flex-row flex-wrap gap-4 items-center">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-md shadow flex flex-col md:flex-row flex-wrap gap-4 items-center transition-colors">
         <div className="relative flex-grow">
           <input 
             type="text" 
@@ -197,22 +197,22 @@ const Dashboard = () => {
 
       {error && <div className="text-red-600 bg-red-50 p-4 rounded-md">{error}</div>}
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-md mt-4">
-        <ul className="divide-y divide-gray-200">
+      <div className="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md mt-4 transition-colors">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {loading ? (
-            <div className="animate-pulse divide-y divide-gray-200">
+            <div className="animate-pulse divide-y divide-gray-200 dark:divide-gray-700">
               {[1, 2, 3].map(i => (
                 <div key={i} className="p-4 sm:px-6">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-3"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-3"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
                 </div>
               ))}
             </div>
           ) : safeTickets.length === 0 ? (
             <div className="p-12 text-center flex flex-col items-center justify-center">
-              <Inbox className="h-12 w-12 text-gray-400 mb-3" />
-              <h3 className="text-lg font-medium text-gray-900">No tickets found</h3>
-              <p className="mt-1 text-sm text-gray-500">
+              <Inbox className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-3" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">No tickets found</h3>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {hasFilters 
                   ? "No tickets match your filters. Try adjusting filters." 
                   : "No tickets yet. Create your first ticket to get started."}
@@ -220,12 +220,12 @@ const Dashboard = () => {
             </div>
           ) : (
             safeTickets.map((t) => (
-              <li key={t.id} className={`bg-white transition-all ${
+              <li key={t.id} className={`bg-white dark:bg-gray-800 transition-all ${
                 t.priority === 'URGENT' ? 'border-l-2 border-red-500' : 
-                t.priority === 'HIGH' ? 'border-l-2 border-red-300' : ''
+                t.priority === 'HIGH' ? 'border-l-2 border-red-300 dark:border-red-400' : ''
               }`}>
                 <Link to={`/tickets/${t.id}`} className={`block active:scale-[0.995] transition-all p-4 sm:px-6 ${
-                  t.priority === 'URGENT' ? 'hover:bg-red-50/40' : 'hover:bg-gray-50'
+                  t.priority === 'URGENT' ? 'hover:bg-red-50/40 dark:hover:bg-red-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
                 }`}>
                   <div className="flex items-start justify-between">
                     <div className="flex flex-col space-y-1 truncate pr-4">
@@ -235,9 +235,9 @@ const Dashboard = () => {
                             {getFeedbackTypeLabel(t.type)}
                           </span>
                         )}
-                        <p className="text-base font-semibold text-gray-900 truncate">{t.title}</p>
+                        <p className="text-base font-semibold text-gray-900 dark:text-white truncate">{t.title}</p>
                       </div>
-                      <div className="text-sm text-gray-500 truncate">
+                      <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
                         <p>Submitted by {t.submitter.name} • Updated {formatRelativeTime(t.updatedAt)} • {t.category}</p>
                       </div>
                     </div>
@@ -261,17 +261,17 @@ const Dashboard = () => {
       </div>
 
       {showNewModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50 transition-opacity duration-200">
-          <div className="bg-white rounded-lg p-6 max-w-lg w-full transform transition-all duration-200 scale-100 shadow-xl">
-            <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">Submit New Ticket</h3>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 transition-opacity duration-200 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg p-6 max-w-lg w-full transform transition-all duration-200 scale-100 shadow-xl">
+            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">Submit New Ticket</h3>
             <form onSubmit={handleCreateTicket} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Title</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
                 <input required disabled={isCreating} value={newTitle} onChange={e=>setNewTitle(e.target.value)} className="input-field" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Category</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
                   <select disabled={isCreating} value={newCategory} onChange={e=>setNewCategory(e.target.value)} className="input-field">
                     <option>General</option>
                     <option>Academic</option>
@@ -280,7 +280,7 @@ const Dashboard = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Priority</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Priority</label>
                   <select disabled={isCreating} value={newPriority} onChange={e=>setNewPriority(e.target.value)} className="input-field">
                     <option value="LOW">Low</option>
                     <option value="MEDIUM">Medium</option>
@@ -290,7 +290,7 @@ const Dashboard = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
                 <textarea required disabled={isCreating} rows={4} value={newDesc} onChange={e=>setNewDesc(e.target.value)} className="input-field" />
               </div>
               <div className="flex justify-end space-x-3 mt-6">
@@ -314,13 +314,13 @@ const Dashboard = () => {
 };
 
 const StatCard = ({ title, value, highlight, icon: Icon, titleTooltip }) => (
-  <div className={`bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition duration-150 border ${highlight ? 'border-red-200' : 'border-gray-200'}`}>
+  <div className={`bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm hover:shadow-md transition duration-150 border ${highlight ? 'border-red-200 dark:border-red-900/30' : 'border-gray-200 dark:border-gray-700'}`}>
     <div className="flex items-center justify-between" title={titleTooltip}>
-      <dt className="text-sm font-medium text-gray-500 truncate cursor-default">{title}</dt>
-      {Icon && <Icon className={`h-5 w-5 ${highlight ? 'text-red-500' : 'text-gray-400'}`} />}
+      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 truncate cursor-default">{title}</dt>
+      {Icon && <Icon className={`h-5 w-5 ${highlight ? 'text-red-500 dark:text-red-400' : 'text-gray-400 dark:text-gray-500'}`} />}
     </div>
-    <dd className={`mt-1 text-3xl font-semibold ${highlight ? 'text-red-600' : 'text-gray-900'}`}>{value}</dd>
-    <p className="mt-2 text-xs text-gray-400">All time</p>
+    <dd className={`mt-1 text-3xl font-semibold ${highlight ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>{value}</dd>
+    <p className="mt-2 text-xs text-gray-400 dark:text-gray-500">All time</p>
   </div>
 );
 
