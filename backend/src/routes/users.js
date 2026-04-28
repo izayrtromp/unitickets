@@ -33,6 +33,60 @@ router.get('/staff', authenticateToken, authorizeRoles('CLASS_REP', 'ADMIN'), as
   }
 });
 
+// Preview clean up expired unverified accounts (Admin only)
+router.get('/unverified/cleanup/preview', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours ago
+    
+    const count = await prisma.user.count({
+      where: {
+        isEmailVerified: false,
+        isActive: false,
+        approvalStatus: 'PENDING',
+        createdAt: {
+          lt: cutoffDate
+        }
+      }
+    });
+
+    res.json({ count, cutoffDate: cutoffDate.toISOString() });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to preview unverified accounts cleanup' });
+  }
+});
+
+// Clean up expired unverified accounts (Admin only)
+router.delete('/unverified/cleanup', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
+  try {
+    const cutoffDate = new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours ago
+    
+    const result = await prisma.user.deleteMany({
+      where: {
+        isEmailVerified: false,
+        isActive: false,
+        approvalStatus: 'PENDING',
+        createdAt: {
+          lt: cutoffDate
+        }
+      }
+    });
+
+    await logAuditAction({
+      actor: req.user,
+      action: 'UNVERIFIED_ACCOUNTS_CLEANED',
+      targetType: 'SYSTEM',
+      targetLabel: 'Expired Accounts',
+      metadata: { numberDeleted: result.count, cutoffDate: cutoffDate.toISOString() }
+    });
+
+    res.json({ deletedCount: result.count, message: `${result.count} expired unverified accounts removed.` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to clean up unverified accounts' });
+  }
+});
+
 // Create new user (Admin only)
 router.post('/', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {

@@ -24,6 +24,10 @@ const AdminUsers = () => {
   const [isResettingPwd, setIsResettingPwd] = useState(false);
   const [isTogglingId, setIsTogglingId] = useState(null);
   const [isSavingRoleId, setIsSavingRoleId] = useState(null);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [showCleanupModal, setShowCleanupModal] = useState(false);
+  const [cleanupPreviewCount, setCleanupPreviewCount] = useState(0);
   
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -116,6 +120,37 @@ const AdminUsers = () => {
       addToast('Unverified account rejected', 'success');
     } catch (err) {
       addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to reject user', 'error');
+    }
+  };
+
+  const handlePreviewCleanup = async () => {
+    try {
+      setIsPreviewing(true);
+      const res = await api.get('/users/unverified/cleanup/preview');
+      if (res.data.count === 0) {
+        addToast('There are no expired unverified accounts to clean up.', 'success');
+      } else {
+        setCleanupPreviewCount(res.data.count);
+        setShowCleanupModal(true);
+      }
+    } catch (err) {
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to preview cleanup', 'error');
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const handleConfirmCleanup = async () => {
+    try {
+      setIsCleaningUp(true);
+      const res = await api.delete('/users/unverified/cleanup');
+      fetchUsers();
+      addToast(res.data.message || 'Cleanup complete', 'success');
+      setShowCleanupModal(false);
+    } catch (err) {
+      addToast(err.response?.data?.message || err.response?.data?.error || 'Failed to clean up accounts', 'error');
+    } finally {
+      setIsCleaningUp(false);
     }
   };
 
@@ -255,8 +290,15 @@ const AdminUsers = () => {
         </div>
         
         {viewTab === 'UNVERIFIED' && (
-          <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-100 dark:border-yellow-800/30 text-sm text-yellow-800 dark:text-yellow-300">
-            These users registered but have not verified their institutional email yet. They cannot access the app until they verify their email.
+          <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-100 dark:border-yellow-800/30 text-sm text-yellow-800 dark:text-yellow-300 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <span>These users registered but have not verified their institutional email yet. They cannot access the app until they verify their email.</span>
+            <button 
+              onClick={handlePreviewCleanup} 
+              disabled={isPreviewing}
+              className="px-3 py-1.5 text-xs font-semibold rounded border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 dark:border-red-800/50 dark:text-red-400 dark:bg-red-900/30 dark:hover:bg-red-900/50 transition-colors whitespace-nowrap disabled:opacity-50"
+            >
+              {isPreviewing ? 'Loading...' : 'Clean up expired unverified accounts'}
+            </button>
           </div>
         )}
         
@@ -418,6 +460,24 @@ const AdminUsers = () => {
                   {isResettingPwd ? 'Updating...' : 'Save Password'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cleanup Preview Modal */}
+      {showCleanupModal && (
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Confirm Cleanup</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+              This will permanently remove <strong>{cleanupPreviewCount}</strong> unverified account{cleanupPreviewCount !== 1 ? 's' : ''} older than 48 hours. Continue?
+            </p>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button disabled={isCleaningUp} onClick={() => setShowCleanupModal(false)} className="btn-secondary transition-all duration-200">Cancel</button>
+              <button disabled={isCleaningUp} onClick={handleConfirmCleanup} className="btn-primary bg-red-600 hover:bg-red-700 focus:ring-red-500 dark:bg-red-700 dark:hover:bg-red-600 disabled:opacity-50 transition-all duration-200 flex items-center justify-center">
+                {isCleaningUp ? 'Deleting...' : 'Delete Accounts'}
+              </button>
             </div>
           </div>
         </div>
