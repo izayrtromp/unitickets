@@ -96,15 +96,20 @@ router.post('/register-request', registerLimiter, async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
-    const emailSent = await sendVerificationEmail(email, verificationUrl);
-
-    if (!emailSent) {
-      await prisma.user.delete({ where: { email } });
-      return res.status(500).json({ error: 'Failed to send verification email. Please try registering again later.' });
+    let emailSent = false;
+    try {
+      // Add a 10-second timeout safeguard against hanging SMTP connections
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
+      emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
+    } catch (emailError) {
+      console.error('Failed to send verification email during registration:', emailError);
+      emailSent = false;
     }
 
     const responsePayload = {
-      message: 'Account request submitted. Please check your University of Aruba email to verify your account.'
+      message: emailSent 
+        ? 'Account request submitted. Please check your University of Aruba email to verify your account.'
+        : 'Account created. Check your email or resend verification.'
     };
 
     if (process.env.NODE_ENV !== 'production') {
