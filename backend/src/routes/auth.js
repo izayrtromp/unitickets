@@ -42,7 +42,9 @@ const resendCooldowns = new Map(); // in-memory cache for rate-limiting
  */
 router.post('/register-request', registerLimiter, async (req, res) => {
   try {
-    const { name, studentId, email, password, confirmPassword } = req.body;
+    const { name, studentId, password, confirmPassword } = req.body;
+    let { email } = req.body;
+    if (email) email = email.trim().toLowerCase();
 
     if (!name || !studentId || !email || !password) {
       return res.status(400).json({ error: 'All fields are required' });
@@ -130,7 +132,9 @@ router.post('/register-request', registerLimiter, async (req, res) => {
  */
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    let { email } = req.body;
+    if (email) email = email.trim().toLowerCase();
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
@@ -211,7 +215,8 @@ router.post('/verify-email', async (req, res) => {
  */
 router.post('/resend-verification', resendLimiter, async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    if (email) email = email.trim().toLowerCase();
     if (!email) {
       return res.status(400).json({ error: 'Email is required.' });
     }
@@ -251,7 +256,15 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const verificationUrl = `${frontendUrl}/verify-email?token=${verificationToken}`;
 
-    const emailSent = await sendVerificationEmail(email, verificationUrl);
+    let emailSent = false;
+    try {
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
+      emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
+    } catch (emailError) {
+      console.error('Failed to resend verification email:', emailError);
+      emailSent = false;
+    }
+    
     if (emailSent) {
       resendCooldowns.set(email, now);
     }
@@ -270,7 +283,8 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
  */
 router.post('/forgot-password', forgotPasswordLimiter, async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    if (email) email = email.trim().toLowerCase();
     if (!email) {
       return res.status(400).json({ error: 'Email is required.' });
     }

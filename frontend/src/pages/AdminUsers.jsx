@@ -201,7 +201,7 @@ const AdminUsers = () => {
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    const matchesTab = viewTab === 'UNVERIFIED' ? u.isEmailVerified === false : u.isEmailVerified === true;
+    const matchesTab = viewTab === 'UNVERIFIED' ? u.isEmailVerified === false : true;
     return matchesSearch && matchesRole && matchesTab;
   });
 
