@@ -297,7 +297,7 @@ router.patch('/:id/reopen', authenticateToken, async (req, res) => {
     const updatedTicket = await prisma.ticket.update({
       where: { id: req.params.id },
       data: {
-        status: 'OPEN',
+        status: 'NEW',
         reopenCount: ticket.reopenCount + 1,
         lastReopenedAt: new Date()
       }
@@ -330,8 +330,11 @@ router.patch('/:id/reopen', authenticateToken, async (req, res) => {
 // Delete ticket
 router.delete('/:id', authenticateToken, authorizeRoles('ADMIN'), async (req, res) => {
   try {
-    // Delete associated comments first
+    // Delete associated records first
     await prisma.comment.deleteMany({ where: { ticketId: req.params.id } });
+    await prisma.activity.deleteMany({ where: { ticketId: req.params.id } });
+    await prisma.notification.deleteMany({ where: { ticketId: req.params.id } });
+    await prisma.meetingAgendaItem.deleteMany({ where: { ticketId: req.params.id } });
     await prisma.ticket.delete({ where: { id: req.params.id } });
     res.json({ message: 'Ticket deleted successfully' });
   } catch (error) {
