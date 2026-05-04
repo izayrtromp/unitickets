@@ -110,8 +110,8 @@ router.post('/register-request', registerLimiter, async (req, res) => {
 
     const responsePayload = {
       message: emailSent 
-        ? 'Account request submitted. Please check your University of Aruba email to verify your account.'
-        : 'Account created. Check your email or resend verification.'
+        ? 'Account created. Please check your email to verify your account.'
+        : 'Account created, but the verification email could not be sent. Please use Resend Verification or contact an admin.'
     };
 
     if (process.env.NODE_ENV !== 'production') {
@@ -267,9 +267,10 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     
     if (emailSent) {
       resendCooldowns.set(email, now);
+      res.json({ message: genericSuccess });
+    } else {
+      res.status(500).json({ error: 'Verification email could not be sent right now. Please try again later.' });
     }
-
-    res.json({ message: genericSuccess });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });

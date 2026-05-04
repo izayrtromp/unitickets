@@ -1,5 +1,23 @@
 const nodemailer = require('nodemailer');
 
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: process.env.EMAIL_PORT || 465,
+  secure: process.env.EMAIL_PORT === '465' || process.env.EMAIL_PORT == 465,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('Email service failed to connect');
+  } else {
+    console.log('Email service ready');
+  }
+});
+
 /**
  * Dispatches a password reset email to a user.
  * Security reasoning: Delivers a time-sensitive, unguessable recovery link.
@@ -7,16 +25,6 @@ const nodemailer = require('nodemailer');
  */
 const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: process.env.EMAIL_PORT === '465',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"UniTickets" <no-reply@unitickets.edu>',
       to: toEmail,
@@ -37,10 +45,11 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Password reset email sent to ${toEmail}. MessageId: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error('Email send error:', error);
+    console.error('Email send error:', error.message);
     return false;
   }
 };
@@ -52,16 +61,6 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
  */
 const sendVerificationEmail = async (toEmail, verificationUrl) => {
   try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: process.env.EMAIL_PORT === '465', // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"UniTickets" <no-reply@unitickets.edu>',
       to: toEmail,
@@ -77,15 +76,17 @@ const sendVerificationEmail = async (toEmail, verificationUrl) => {
           </p>
           <p>If the button doesn't work, copy and paste this link into your browser:</p>
           <p><a href="${verificationUrl}" style="color: #059669; word-break: break-all;">${verificationUrl}</a></p>
+          <p style="margin-top: 15px; font-weight: bold;">Note: If you do not see this email in your inbox, please check your spam or junk folder.</p>
           <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">If you did not request this account, you can safely ignore this email.</p>
         </div>
       `,
     };
 
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Verification email sent to ${toEmail}. MessageId: ${info.messageId}`);
     return true;
   } catch (error) {
-    console.error('Email send error:', error);
+    console.error('Email send error:', error.message);
     return false;
   }
 };
