@@ -1,9 +1,14 @@
 const nodemailer = require('nodemailer');
 
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 465,
-  secure: process.env.EMAIL_PORT === '465' || process.env.EMAIL_PORT == 465,
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  requireTLS: true,
+  family: 4,
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 10000,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -26,7 +31,7 @@ transporter.verify((error, success) => {
 const sendPasswordResetEmail = async (toEmail, resetUrl) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"UniTickets" <no-reply@unitickets.edu>',
+      from: `"UniTickets" <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: 'Reset your UniTickets password',
       html: `
@@ -62,7 +67,7 @@ const sendPasswordResetEmail = async (toEmail, resetUrl) => {
 const sendVerificationEmail = async (toEmail, verificationUrl) => {
   try {
     const mailOptions = {
-      from: process.env.EMAIL_FROM || '"UniTickets" <no-reply@unitickets.edu>',
+      from: `"UniTickets" <${process.env.EMAIL_USER}>`,
       to: toEmail,
       subject: 'Verify your UniTickets account',
       html: `
