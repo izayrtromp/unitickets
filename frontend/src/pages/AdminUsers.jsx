@@ -291,7 +291,7 @@ const AdminUsers = () => {
         
         {viewTab === 'UNVERIFIED' && (
           <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-100 dark:border-yellow-800/30 text-sm text-yellow-800 dark:text-yellow-300 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <span>These users registered but have not verified their institutional email yet. They cannot access the app until they verify their email. If a user did not receive the email, ask them to check spam/junk or use Resend Verification.</span>
+            <span>These users registered but have not verified their institutional email yet. They cannot access the app until they verify their email. If users do not receive verification emails, ask them to check spam/junk and use Resend Verification. If the daily limit is reached, an admin may create or review the account manually.</span>
             <button 
               onClick={handlePreviewCleanup} 
               disabled={isPreviewing}

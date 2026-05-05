@@ -225,7 +225,7 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Please use your University of Aruba email address (@ua.aw).' });
     }
 
-    const genericSuccess = 'If an unverified account exists, a new verification email has been sent.';
+    const genericSuccess = 'If an unverified account exists, a new verification email has been sent. Please check your inbox and spam/junk folder.';
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
@@ -236,9 +236,21 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
       return res.status(400).json({ error: 'This account is already verified.' });
     }
 
-    const now = Date.now();
+    const now = new Date();
+    let windowStart = user.verificationResendWindowStart;
+    let count = user.verificationResendCount;
+
+    if (!windowStart || (now - windowStart) > 24 * 60 * 60 * 1000) {
+      windowStart = now;
+      count = 0;
+    }
+
+    if (count >= 5) {
+      return res.status(429).json({ error: 'You have reached the maximum number of verification emails for today. Please try again later or contact an administrator.' });
+    }
+
     const lastSent = resendCooldowns.get(email);
-    if (lastSent && (now - lastSent) < 2 * 60 * 1000) {
+    if (lastSent && (now.getTime() - lastSent) < 2 * 60 * 1000) {
       return res.status(429).json({ error: 'Please wait before requesting another verification email.' });
     }
 
@@ -249,7 +261,8 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
       where: { id: user.id },
       data: { 
         verificationToken,
-        verificationTokenExpires
+        verificationTokenExpires,
+        verificationResendWindowStart: windowStart
       }
     });
 
@@ -266,7 +279,11 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     }
     
     if (emailSent) {
-      resendCooldowns.set(email, now);
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { verificationResendCount: count + 1 }
+      });
+      resendCooldowns.set(email, now.getTime());
       res.json({ message: genericSuccess });
     } else {
       res.status(500).json({ error: 'Verification email could not be sent right now. Please try again later.' });

@@ -68,12 +68,14 @@ const sendVerificationEmail = async (toEmail, verificationUrl) => {
   try {
     const mailOptions = {
       from: `"UniTickets" <${process.env.EMAIL_USER}>`,
+      replyTo: process.env.EMAIL_USER,
       to: toEmail,
       subject: 'Verify your UniTickets account',
+      text: `You requested access to UniTickets.\n\nPlease verify your University of Aruba email by clicking the link below or pasting it into your browser:\n${verificationUrl}\n\nIf you do not see this email, check your spam or junk folder.\nIf you did not request this account, you can safely ignore this email.`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <h2 style="color: #059669;">Welcome to UniTickets</h2>
-          <p>Please verify your University of Aruba email by clicking the link below.</p>
+          <p>You requested access to UniTickets. Please verify your University of Aruba email by clicking the link below.</p>
           <p style="margin: 30px 0;">
             <a href="${verificationUrl}" style="background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
               Verify Email
@@ -81,7 +83,7 @@ const sendVerificationEmail = async (toEmail, verificationUrl) => {
           </p>
           <p>If the button doesn't work, copy and paste this link into your browser:</p>
           <p><a href="${verificationUrl}" style="color: #059669; word-break: break-all;">${verificationUrl}</a></p>
-          <p style="margin-top: 15px; font-weight: bold;">Note: If you do not see this email in your inbox, please check your spam or junk folder.</p>
+          <p style="margin-top: 15px; font-weight: bold;">Note: If you do not see this email, check your spam or junk folder.</p>
           <p style="margin-top: 30px; font-size: 12px; color: #6b7280;">If you did not request this account, you can safely ignore this email.</p>
         </div>
       `,

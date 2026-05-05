@@ -22,6 +22,8 @@ model User {
   passwordResetToken String?
   passwordResetExpires DateTime?
   createdAt    DateTime  @default(now())
+  verificationResendCount Int @default(0)
+  verificationResendWindowStart DateTime?
 
   ticketsSubmitted Ticket[]  @relation("Submitter")
   ticketsAssigned  Ticket[]  @relation("Assignee")
