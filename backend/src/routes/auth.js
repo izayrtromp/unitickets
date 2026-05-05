@@ -104,14 +104,14 @@ router.post('/register-request', registerLimiter, async (req, res) => {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
       emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
     } catch (emailError) {
-      console.error('Failed to send verification email during registration:', emailError);
+      console.error('Email sending failed during registration. Code:', emailError.code, 'Message:', emailError.message);
       emailSent = false;
     }
 
     const responsePayload = {
       message: emailSent 
         ? 'Account created. Please check your email to verify your account.'
-        : 'Account created, but the verification email could not be sent. Please use Resend Verification or contact an admin.'
+        : 'Account created, but the verification email could not be sent. Please try again using Resend Verification later or contact an administrator.'
     };
 
     if (process.env.NODE_ENV !== 'production') {
@@ -282,7 +282,7 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
       emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
     } catch (emailError) {
-      console.error('Failed to resend verification email:', emailError);
+      console.error('Email sending failed during resend. Code:', emailError.code, 'Message:', emailError.message);
       emailSent = false;
     }
     

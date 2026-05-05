@@ -3,6 +3,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const dns = require('dns');
+
+// Force IPv4 resolution to prevent ENETUNREACH on Render
+dns.setDefaultResultOrder('ipv4first');
 
 dotenv.config();
 
@@ -95,6 +99,9 @@ app.listen(PORT, () => {
   const hasLocalhost = frontendUrl.includes('localhost');
   console.log(`FRONTEND_URL contains localhost: ${hasLocalhost}`);
   
+  console.log(`SMTP host mode: gmail-smtp-ipv4`);
+  console.log(`SMTP port: ${process.env.EMAIL_PORT || 587}`);
+
   if (process.env.NODE_ENV === 'production' && hasLocalhost) {
     console.warn('WARNING: Running in production but FRONTEND_URL contains localhost! Verification links will be broken for real users.');
   }

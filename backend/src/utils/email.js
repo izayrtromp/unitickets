@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
+const dns = require('dns');
+
+let transporterOptions = {
   host: 'smtp.gmail.com',
   port: 587,
   secure: false,
@@ -13,14 +15,26 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-});
+};
 
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('Email service failed to connect');
-  } else {
-    console.log('Email service ready');
+let transporter = nodemailer.createTransport(transporterOptions);
+
+// Strict IPv4 resolution strategy for Render environments
+dns.resolve4('smtp.gmail.com', (err, addresses) => {
+  if (!err && addresses && addresses.length > 0) {
+    const ipv4Address = addresses[0];
+    transporterOptions.host = ipv4Address;
+    transporterOptions.tls = { servername: 'smtp.gmail.com' };
+    transporter = nodemailer.createTransport(transporterOptions);
   }
+
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('Email service failed to connect:', error.code || error.message);
+    } else {
+      console.log('Email service ready (transporter.verify() passed)');
+    }
+  });
 });
 
 /**
