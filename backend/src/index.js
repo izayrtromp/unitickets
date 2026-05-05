@@ -80,4 +80,23 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  
+  // Safe startup configuration logs
+  console.log('--- Environment Check ---');
+  console.log(`EMAIL_USER configured: ${!!process.env.EMAIL_USER}`);
+  if (process.env.EMAIL_USER) {
+    const domain = process.env.EMAIL_USER.split('@')[1] || 'unknown';
+    console.log(`Sender domain: @${domain}`);
+  }
+  
+  const frontendUrl = process.env.FRONTEND_URL || '';
+  console.log(`FRONTEND_URL configured: ${!!process.env.FRONTEND_URL}`);
+  
+  const hasLocalhost = frontendUrl.includes('localhost');
+  console.log(`FRONTEND_URL contains localhost: ${hasLocalhost}`);
+  
+  if (process.env.NODE_ENV === 'production' && hasLocalhost) {
+    console.warn('WARNING: Running in production but FRONTEND_URL contains localhost! Verification links will be broken for real users.');
+  }
+  console.log('-------------------------');
 });
