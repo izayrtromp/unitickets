@@ -233,14 +233,17 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      console.log(`RESEND_VERIFICATION_BRANCH: USER_NOT_FOUND (Domain: ${email.split('@')[1] || 'unknown'})`);
       return res.json({ message: genericSuccess });
     }
 
     if (user.approvalStatus === 'REJECTED') {
+      console.log(`RESEND_VERIFICATION_BRANCH: REJECTED (Domain: ${email.split('@')[1] || 'unknown'})`);
       return res.json({ message: genericSuccess });
     }
 
     if (user.isEmailVerified) {
+      console.log(`RESEND_VERIFICATION_BRANCH: ALREADY_VERIFIED (Domain: ${email.split('@')[1] || 'unknown'})`);
       return res.status(400).json({ error: 'This account is already verified.' });
     }
 
@@ -254,11 +257,13 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     }
 
     if (count >= 5) {
+      console.log(`RESEND_VERIFICATION_BRANCH: DAILY_LIMIT_BLOCKED (Domain: ${email.split('@')[1] || 'unknown'})`);
       return res.status(429).json({ error: 'You have reached the maximum number of verification emails for today. Please try again later or contact an administrator.' });
     }
 
     const lastSent = resendCooldowns.get(email);
     if (lastSent && (now.getTime() - lastSent) < 2 * 60 * 1000) {
+      console.log(`RESEND_VERIFICATION_BRANCH: COOLDOWN_BLOCKED (Domain: ${email.split('@')[1] || 'unknown'})`);
       return res.status(429).json({ error: 'Please wait before requesting another verification email.' });
     }
 
@@ -287,6 +292,7 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
     }
     
     if (emailSent) {
+      console.log(`RESEND_VERIFICATION_BRANCH: SENT_SUCCESSFULLY (Domain: ${email.split('@')[1] || 'unknown'})`);
       await prisma.user.update({
         where: { id: user.id },
         data: { verificationResendCount: count + 1 }
@@ -294,6 +300,7 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
       resendCooldowns.set(email, now.getTime());
       res.json({ message: genericSuccess });
     } else {
+      console.log(`RESEND_VERIFICATION_BRANCH: SMTP_FAILED (Domain: ${email.split('@')[1] || 'unknown'})`);
       res.status(500).json({ error: 'Verification email could not be sent right now. Please try again later.' });
     }
   } catch (error) {
