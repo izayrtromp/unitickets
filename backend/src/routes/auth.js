@@ -186,6 +186,10 @@ router.post('/verify-email', async (req, res) => {
     const user = await prisma.user.findFirst({ where: { verificationToken: token } });
     if (!user) return res.status(400).json({ error: 'Invalid or expired verification token' });
 
+    if (user.approvalStatus === 'REJECTED') {
+      return res.status(403).json({ error: 'This account request has been rejected. Please contact an administrator.' });
+    }
+
     if (user.verificationTokenExpires && user.verificationTokenExpires < new Date()) {
       return res.status(400).json({ error: 'Verification link expired. Please request a new one.' });
     }
@@ -229,6 +233,10 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      return res.json({ message: genericSuccess });
+    }
+
+    if (user.approvalStatus === 'REJECTED') {
       return res.json({ message: genericSuccess });
     }
 
