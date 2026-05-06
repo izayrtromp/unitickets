@@ -123,6 +123,16 @@ const AdminUsers = () => {
     }
   };
 
+  const handleResendVerification = async (email) => {
+    try {
+      const res = await api.post('/auth/resend-verification', { email });
+      addToast(res.data.message || 'Verification email sent!', 'success');
+      fetchUsers(); // Refresh to update potentially updated fields
+    } catch (err) {
+      addToast(err.response?.data?.error || err.response?.data?.message || 'Failed to resend verification email.', 'error');
+    }
+  };
+
   const handlePreviewCleanup = async () => {
     try {
       setIsPreviewing(true);
@@ -401,6 +411,7 @@ const AdminUsers = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
                       {u.isEmailVerified === false ? (
                         <>
+                          <button onClick={() => handleResendVerification(u.email)} className="text-blue-600 hover:text-blue-900 transition-colors">Resend Verification</button>
                           <button onClick={() => handleReject(u.id)} className="text-red-600 hover:text-red-900 transition-colors">Reject / Delete</button>
                         </>
                       ) : (

@@ -100,11 +100,9 @@ router.post('/register-request', registerLimiter, async (req, res) => {
 
     let emailSent = false;
     try {
-      // Add a 10-second timeout safeguard against hanging SMTP connections
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
-      emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
+      emailSent = await sendVerificationEmail(email, verificationUrl);
     } catch (emailError) {
-      console.error('Email sending failed during registration. Code:', emailError.code, 'Message:', emailError.message);
+      console.error('Unexpected error during registration email send:', emailError);
       emailSent = false;
     }
 
@@ -284,10 +282,9 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
 
     let emailSent = false;
     try {
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Email sending timed out')), 10000));
-      emailSent = await Promise.race([sendVerificationEmail(email, verificationUrl), timeoutPromise]);
+      emailSent = await sendVerificationEmail(email, verificationUrl);
     } catch (emailError) {
-      console.error('Email sending failed during resend. Code:', emailError.code, 'Message:', emailError.message);
+      console.error('Unexpected error during resend email send:', emailError);
       emailSent = false;
     }
     
